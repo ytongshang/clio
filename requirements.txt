@@ -5,6 +5,7 @@ black==23.10.1
 blinker==1.6.3
 cfgv==3.4.0
 click==8.1.7
+colorlog==6.7.0
 distlib==0.3.7
 filelock==3.13.0
 Flask==3.0.0
