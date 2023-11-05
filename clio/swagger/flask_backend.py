@@ -192,8 +192,49 @@ class FlaskBackend:
         before(request, response, req_validation_error, None)
         if req_validation_error:
             abort(response)  # type: ignore
-
         response = make_response(func(*args, **kwargs))
+
+        if resp and resp.has_model() and getattr(resp, "validate"):
+            model = resp.find_model(response.status_code)
+            if model:
+                try:
+                    model.validate(response.get_json())
+                except ValidationError as err:
+                    resp_validation_error = err
+                    response = make_response(
+                        jsonify({"message": "response validation error"}), 500
+                    )
+
+        after(request, response, resp_validation_error, None)
+
+        return response
+
+    async def async_validate(
+        self,
+        func: Callable,
+        query: Optional[Type[BaseModel]],
+        body: Optional[RequestBase],
+        headers: Optional[Type[BaseModel]],
+        cookies: Optional[Type[BaseModel]],
+        resp: Optional[ResponseBase],
+        before: Callable,
+        after: Callable,
+        *args: List[Any],
+        **kwargs: Mapping[str, Any],
+    ) -> FlaskResponse:
+        response, req_validation_error, resp_validation_error = None, None, None
+        try:
+            self.request_validation(request, query, body, headers, cookies)
+        except ValidationError as err:
+            req_validation_error = err
+            response = make_response(
+                jsonify(err.errors()), self.config.VALIDATION_ERROR_CODE
+            )
+
+        before(request, response, req_validation_error, None)
+        if req_validation_error:
+            abort(response)  # type: ignore
+        response = make_response(await func(*args, **kwargs))
 
         if resp and resp.has_model() and getattr(resp, "validate"):
             model = resp.find_model(response.status_code)

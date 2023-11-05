@@ -1,3 +1,4 @@
+import inspect
 from collections import defaultdict
 from copy import deepcopy
 from functools import wraps
@@ -105,6 +106,10 @@ class FlaskPydanticSpec:
                 return True
             return False
 
+    @staticmethod
+    def is_async_function(func):
+        return inspect.isasyncgenfunction(func) or inspect.iscoroutinefunction(func)
+
     def validate(
         self,
         query: Optional[Type[BaseModel]] = None,
@@ -135,22 +140,43 @@ class FlaskPydanticSpec:
         """
 
         def decorate_validation(func: Callable) -> Callable:
-            @wraps(func)
-            def sync_validate(*args: Any, **kwargs: Any) -> FlaskResponse:
-                return self.backend.validate(
-                    func,
-                    query,
-                    body if isinstance(body, RequestBase) else Request(body),
-                    headers,
-                    cookies,
-                    resp,
-                    before or self.before,
-                    after or self.after,
-                    *args,
-                    **kwargs,
-                )
+            is_async = FlaskPydanticSpec.is_async_function(func)
+            if is_async:
 
-            validation = sync_validate
+                @wraps(func)
+                async def async_validate(*args: Any, **kwargs: Any) -> FlaskResponse:
+                    return await self.backend.async_validate(
+                        func,
+                        query,
+                        body if isinstance(body, RequestBase) else Request(body),
+                        headers,
+                        cookies,
+                        resp,
+                        before or self.before,
+                        after or self.after,
+                        *args,
+                        **kwargs,
+                    )
+
+                validation = async_validate
+            else:
+
+                @wraps(func)
+                def sync_validate(*args: Any, **kwargs: Any) -> FlaskResponse:
+                    return self.backend.validate(
+                        func,
+                        query,
+                        body if isinstance(body, RequestBase) else Request(body),
+                        headers,
+                        cookies,
+                        resp,
+                        before or self.before,
+                        after or self.after,
+                        *args,
+                        **kwargs,
+                    )
+
+                validation = sync_validate
 
             # register
             for name, model in zip(
