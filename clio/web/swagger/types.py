@@ -1,7 +1,7 @@
 import re
 from typing import Any, Dict, Iterable, Mapping, NamedTuple, Optional, Type
 
-from pydantic import BaseModel
+from clio.pydantics import BaseModel
 
 from .constants import OPENAPI_SCHEMA_TEMPLATE
 

@@ -21,7 +21,7 @@ def _console_handler(_logger):
     _logger.setLevel(logging.DEBUG)
 
 
-default_logger = colorlog.getLogger()
+default_logger = logging.getLogger()
 _console_handler(default_logger)
 
 

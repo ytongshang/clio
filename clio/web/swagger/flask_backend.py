@@ -1,7 +1,6 @@
 import gzip
 import json
 import logging
-from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Type
 
@@ -9,9 +8,10 @@ from flask import Flask
 from flask import Request as FlaskRequest
 from flask import Response as FlaskResponse
 from flask import abort, jsonify, make_response, request
-from pydantic import BaseModel, ValidationError
 from werkzeug.datastructures import Headers
 from werkzeug.routing import Rule, parse_converter_args
+
+from clio.pydantics import BaseModel, Field, ValidationError
 
 from .config import Config
 from .page import PAGES
@@ -19,12 +19,11 @@ from .types import RequestBase, ResponseBase
 from .utils import parse_multi_dict, parse_rule
 
 
-@dataclass
-class Context:
-    query: Optional[BaseModel]
-    body: Optional[BaseModel]
-    headers: Optional[BaseModel]
-    cookies: Optional[BaseModel]
+class FlaskContext(BaseModel):
+    query: Optional[BaseModel] = Field(None, description="query")
+    body: Optional[BaseModel] = Field(None, description="body")
+    headers: Optional[BaseModel] = Field(None, description="headers")
+    cookies: Optional[BaseModel] = Field(None, description="cookies")
 
 
 class FlaskBackend:
@@ -156,8 +155,8 @@ class FlaskBackend:
         req_cookies: Optional[Mapping[str, str]] = request.cookies or None
         setattr(
             request,
-            "context",
-            Context(
+            "http_context",
+            FlaskContext(
                 query=query.parse_obj(req_query) if query else None,
                 body=getattr(body, "model").parse_obj(parsed_body)
                 if body and getattr(body, "model")

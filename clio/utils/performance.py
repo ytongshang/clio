@@ -20,7 +20,7 @@ class PerformanceItem:
         }
 
 
-def performance_sort_by(item: dict):
+def _performance_sort_by(item: dict):
     return item["average"]
 
 
@@ -47,7 +47,7 @@ class Performance(AbstractSingleton):
         result = []
         for key, value in self.record.items():
             result.append(value.to_json())
-        sorted(result, key=performance_sort_by, reverse=True)
+        sorted(result, key=_performance_sort_by, reverse=True)
         return result
 
     def get_by_name(self, name: str):
@@ -55,5 +55,5 @@ class Performance(AbstractSingleton):
         for key, value in self.record.items():
             if value.function_name == name:
                 result.append(value.to_json())
-        sorted(result, key=performance_sort_by, reverse=True)
+        sorted(result, key=_performance_sort_by, reverse=True)
         return result

@@ -1,7 +1,6 @@
 from typing import Optional, Type
 
-from pydantic import BaseModel, create_model
-from pydantic.fields import FieldInfo
+from clio.pydantics import BaseModel, FieldInfo, create_model
 
 
 def sqlalchemy_table_to_pydantic(table, name: str) -> Type[BaseModel]:

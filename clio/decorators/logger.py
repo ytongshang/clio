@@ -11,14 +11,14 @@ from clio.web import HttpResponse
 """
 
 
-def format_result(result):
+def _format_result(result):
     if isinstance(result, HttpResponse):
         return short_json(result)
     else:
-        return vars(result)
+        return str(result)
 
 
-def input_out_log(func):
+def logger(func):
     module_name = inspect.getmodule(func).__name__
     function_name = func.__name__
     is_async = is_async_function(func)
@@ -39,7 +39,7 @@ def input_out_log(func):
                     elapsed_time,
                     str(args),
                     str(kwargs),
-                    format_result(result),
+                    _format_result(result),
                 )
             )
             return result
@@ -62,7 +62,7 @@ def input_out_log(func):
                     elapsed_time,
                     str(args),
                     str(kwargs),
-                    format_result(result),
+                    _format_result(result),
                 )
             )
             return result

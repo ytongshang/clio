@@ -2,6 +2,7 @@ import logging
 
 from .types import FileResponse, MultipartFormRequest, Request, Response  # isort:skip
 from .spec import FlaskPydanticSpec  # isort:skip
+from .flask_backend import FlaskContext  # isort:skip
 
 __all__ = [
     "FlaskPydanticSpec",
@@ -9,6 +10,7 @@ __all__ = [
     "Request",
     "MultipartFormRequest",
     "FileResponse",
+    "FlaskContext",
 ]
 
 # setup library logging

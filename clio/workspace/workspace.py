@@ -8,10 +8,11 @@ The workspace is a directory containing configuration and working files for glim
 """
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Optional
 
-from clio import Log
+__loger__ = logging.getLogger(__name__)
 
 
 class Workspace:
@@ -147,7 +148,7 @@ class Workspace:
 
         full_path = root.joinpath(relative_path).resolve()
 
-        Log.info(
+        __loger__.info(
             f"Resolving path '{relative_path}' in workspace, Joined paths as '{full_path}'"
         )
 

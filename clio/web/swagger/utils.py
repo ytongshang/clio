@@ -5,9 +5,10 @@ import re
 from json import JSONDecodeError
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from pydantic import BaseModel
 from werkzeug.datastructures import MultiDict
 from werkzeug.routing import Rule
+
+from clio.pydantics import BaseModel
 
 from .types import Request, RequestBase, Response
 

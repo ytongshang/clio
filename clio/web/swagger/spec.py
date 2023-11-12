@@ -7,7 +7,8 @@ from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Type, Union
 from flask import Flask
 from flask import Response as FlaskResponse
 from inflection import camelize
-from pydantic import BaseModel
+
+from clio.pydantics import BaseModel
 
 from . import Request
 from .config import Config
@@ -51,7 +52,6 @@ class FlaskPydanticSpec:
         self,
         backend_name: str = "base",
         backend: Type[FlaskBackend] = FlaskBackend,
-        app: Optional[Flask] = None,
         before: Callable = default_before_handler,
         after: Callable = default_after_handler,
         **kwargs: Any,
@@ -63,10 +63,8 @@ class FlaskPydanticSpec:
         self.backend = backend(self)
         # init
         self.models: Dict[str, Any] = {}
-        if app:
-            self.register(app)
 
-    def register(self, app: Flask) -> None:
+    def register(self, app: Flask, register_router=True) -> None:
         """
         register to backend application
 
@@ -74,7 +72,8 @@ class FlaskPydanticSpec:
         init step.
         """
         self.app = app
-        self.backend.register_route(self.app)
+        if register_router:
+            self.backend.register_route(self.app)
 
     @property
     def spec(self) -> Mapping[str, Any]:
