@@ -5,13 +5,13 @@ from .http.http import HttpException, RawResponse, default_valid_status, http_in
 from .http_response import HttpResponse
 from .swagger import *
 from .web_initializer import (
-    body,
-    cookies,
     exception_handler,
-    headers,
+    http_body,
+    http_cookies,
+    http_headers,
+    http_query,
     http_value,
     http_value_or_throw,
-    query,
     swagger_api,
 )
 
@@ -34,10 +34,10 @@ __all__ = [
     "swagger_api",
     "http_value",
     "http_value_or_throw",
-    "query",
-    "body",
-    "headers",
-    "cookies",
+    "http_query",
+    "http_body",
+    "http_headers",
+    "http_cookies",
     # http
     "RawResponse",
     "HttpException",

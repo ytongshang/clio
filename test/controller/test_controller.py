@@ -8,11 +8,11 @@ from clio import (
     Log,
     Request,
     Response,
-    body,
-    cookies,
-    headers,
+    http_body,
+    http_cookies,
+    http_headers,
+    http_query,
     logger,
-    query,
 )
 
 test_bp = Blueprint("test_bp", __name__, url_prefix="/test")
@@ -31,16 +31,16 @@ def test_api():
     """测试接口
     eeee
     """
-    q: TestQuery = query()
+    q: TestQuery = http_query()
     Log.info(q)
 
-    h = headers()
+    h: TestHeaders = http_headers()
     Log.info(h)
 
-    c = cookies()
+    c: TestCookies = http_cookies()
     Log.info(c)
 
-    b = body()
+    b: TestBody = http_body()
     Log.info(b)
 
     resp = TestResp(e="e")

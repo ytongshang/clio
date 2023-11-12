@@ -10,7 +10,7 @@ class TestBody(BaseModel):
 
 
 class TestHeaders(BaseModel):
-    c: str = Field(..., description="c")
+    C: str = Field(..., description="c")
 
 
 class TestCookies(BaseModel):

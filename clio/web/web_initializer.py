@@ -1,8 +1,6 @@
 from typing import Any, Literal
 
-from flask import Flask
-from flask import Request as FlaskRequest
-from flask import has_request_context, request
+from flask import Flask, has_request_context, request
 
 from clio.utils.log import Log
 
@@ -39,19 +37,19 @@ def http_value_or_throw(name: Literal["query", "body", "headers", "cookies"]):
     return value
 
 
-def query():
+def http_query():
     return http_value_or_throw("query")
 
 
-def body():
+def http_body():
     return http_value_or_throw("body")
 
 
-def headers():
+def http_headers():
     return http_value_or_throw("headers")
 
 
-def cookies():
+def http_cookies():
     return http_value_or_throw("cookies")
 
 
@@ -65,34 +63,4 @@ def swagger_api(
     api_validator = FlaskPydanticSpec(
         backend_name, title=title, version=version, **kwargs
     )
-
-    def __http_query(self):
-        http_context = getattr(self, "http_context", None)
-        if http_context:
-            return http_context.query
-        return None
-
-    def __http_body(self):
-        http_context = getattr(self, "http_context", None)
-        if http_context:
-            return http_context.body
-        return None
-
-    def __http_headers(self):
-        http_context = getattr(self, "http_context", None)
-        if http_context:
-            return http_context.headers
-        return None
-
-    def __http_cookies(self):
-        http_context = getattr(self, "http_context", None)
-        if http_context:
-            return http_context.cookies
-        return None
-
-    FlaskRequest.http_query = __http_query
-    FlaskRequest.http_body = __http_body
-    FlaskRequest.http_headers = __http_headers
-    FlaskRequest.http_cookies = __http_cookies
-
     return api_validator
