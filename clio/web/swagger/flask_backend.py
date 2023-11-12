@@ -15,7 +15,7 @@ from clio.pydantics import BaseModel, Field, ValidationError
 
 from .config import Config
 from .page import PAGES
-from .types import RequestBase, ResponseBase
+from .types import RequestBase, ResponseBase, ValidateError, ValidateErrorItem
 from .utils import parse_multi_dict, parse_rule
 
 
@@ -128,42 +128,100 @@ class FlaskBackend:
 
     def request_validation(
         self,
-        request: FlaskRequest,
+        flask_request: FlaskRequest,
         query: Optional[Type[BaseModel]],
         body: Optional[RequestBase],
         headers: Optional[Type[BaseModel]],
         cookies: Optional[Type[BaseModel]],
     ) -> None:
-        raw_query = request.args or None
+        raw_query = flask_request.args or None
         if raw_query is not None:
             req_query = parse_multi_dict(raw_query)
         else:
             req_query = {}
-        if request.content_type and "application/json" in request.content_type:
-            if request.content_encoding and "gzip" in request.content_encoding:
-                raw_body = gzip.decompress(request.stream.read()).decode(
+        if (
+            flask_request.content_type
+            and "application/json" in flask_request.content_type
+        ):
+            if (
+                flask_request.content_encoding
+                and "gzip" in flask_request.content_encoding
+            ):
+                raw_body = gzip.decompress(flask_request.stream.read()).decode(
                     encoding="utf-8"
                 )
                 parsed_body = json.loads(raw_body)
             else:
-                parsed_body = request.get_json(silent=True) or {}
-        elif request.content_type and "multipart/form-data" in request.content_type:
-            parsed_body = parse_multi_dict(request.form) if request.form else {}
+                parsed_body = flask_request.get_json(silent=True) or {}
+        elif (
+            flask_request.content_type
+            and "multipart/form-data" in flask_request.content_type
+        ):
+            parsed_body = (
+                parse_multi_dict(flask_request.form) if flask_request.form else {}
+            )
         else:
-            parsed_body = request.get_data() or {}
-        req_headers: Optional[Headers] = request.headers or None
-        req_cookies: Optional[Mapping[str, str]] = request.cookies or None
+            parsed_body = flask_request.get_data() or {}
+        req_headers: Optional[Headers] = flask_request.headers or None
+        req_cookies: Optional[Mapping[str, str]] = flask_request.cookies or None
+
+        # query
+        _query = None
+        error_list: List[ValidateErrorItem] = []
+        if query:
+            try:
+                _query = query.parse_obj(req_query)
+            except ValidationError as e:
+                error_list.append(
+                    ValidateErrorItem("query", query.__name__, e.errors(), req_query)
+                )
+
+        # body
+        _body = None
+        if body and getattr(body, "model"):
+            try:
+                _body = getattr(body, "model").parse_obj(parsed_body)
+            except ValidationError as e:
+                error_list.append(
+                    ValidateErrorItem(
+                        "body",
+                        (getattr(body, "model")).__name__,
+                        e.errors(),
+                        parsed_body,
+                    )
+                )
+
+        # headers
+        _headers = None
+        if headers:
+            try:
+                _headers = headers.parse_obj(req_headers or {})
+            except ValidationError as e:
+                error_list.append(
+                    ValidateErrorItem(
+                        "headers", headers.__name__, e.errors(), req_headers or {}
+                    )
+                )
+
+        # cookies
+        _cookies = None
+        if cookies:
+            try:
+                _cookies = cookies.parse_obj(req_cookies or {})
+            except ValidationError as e:
+                error_list.append(
+                    ValidateErrorItem(
+                        "cookies", cookies.__name__, e.errors(), req_cookies or {}
+                    )
+                )
+
+        if len(error_list) > 0:
+            raise ValidateError(error_list)
+
         setattr(
-            request,
+            flask_request,
             "http_context",
-            FlaskContext(
-                query=query.parse_obj(req_query) if query else None,
-                body=getattr(body, "model").parse_obj(parsed_body)
-                if body and getattr(body, "model")
-                else None,
-                headers=headers.parse_obj(req_headers or {}) if headers else None,
-                cookies=cookies.parse_obj(req_cookies or {}) if cookies else None,
-            ),
+            FlaskContext(query=_query, body=_body, headers=_headers, cookies=_cookies),
         )
 
     def validate(
@@ -179,17 +237,24 @@ class FlaskBackend:
         *args: List[Any],
         **kwargs: Mapping[str, Any],
     ) -> FlaskResponse:
-        response, req_validation_error, resp_validation_error = None, None, None
+        response, req_validation_error_map, resp_validation_error = None, None, None
         try:
             self.request_validation(request, query, body, headers, cookies)
-        except ValidationError as err:
-            req_validation_error = err
+        except ValidateError as err:
+            error_map = {}
+            for error in err.errors:
+                error_map[error.name] = {
+                    "model": error.model_name,
+                    "errors": error.errors,
+                }
+            req_validation_error_map = error_map
+
             response = make_response(
-                jsonify(err.errors()), self.config.VALIDATION_ERROR_CODE
+                jsonify(error_map), self.config.VALIDATION_ERROR_CODE
             )
 
-        before(request, response, req_validation_error, None)
-        if req_validation_error:
+        before(request, response, req_validation_error_map, None)
+        if req_validation_error_map:
             abort(response)  # type: ignore
         response = make_response(func(*args, **kwargs))
 
@@ -221,17 +286,24 @@ class FlaskBackend:
         *args: List[Any],
         **kwargs: Mapping[str, Any],
     ) -> FlaskResponse:
-        response, req_validation_error, resp_validation_error = None, None, None
+        response, req_validation_error_map, resp_validation_error = None, None, None
         try:
             self.request_validation(request, query, body, headers, cookies)
-        except ValidationError as err:
-            req_validation_error = err
+        except ValidateError as err:
+            error_map = {}
+            for error in err.errors:
+                error_map[error.name] = {
+                    "model": error.model_name,
+                    "errors": error.errors,
+                }
+            req_validation_error_map = error_map
+
             response = make_response(
-                jsonify(err.errors()), self.config.VALIDATION_ERROR_CODE
+                jsonify(error_map), self.config.VALIDATION_ERROR_CODE
             )
 
-        before(request, response, req_validation_error, None)
-        if req_validation_error:
+        before(request, response, req_validation_error_map, None)
+        if req_validation_error_map:
             abort(response)  # type: ignore
         response = make_response(await func(*args, **kwargs))
 

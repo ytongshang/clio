@@ -1,7 +1,7 @@
 from flask import Flask
 from flask.typing import ResponseReturnValue
 
-from clio import HttpResponse
+from .http_response import HttpResponse
 
 
 def hook_make_response():

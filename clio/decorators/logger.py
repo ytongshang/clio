@@ -2,9 +2,10 @@ import functools
 import inspect
 import time
 
-from clio.decorators import is_async_function
 from clio.utils import Log, Performance, short_json
 from clio.web import HttpResponse
+
+from .common import is_async_function
 
 """
     用于打印函数的输入输出日志,包括函数名,参数,返回值,执行时间，还可用于性能分析 覆盖了@timing_decorator的功能

@@ -4,10 +4,12 @@ from flask import Flask
 from flask import Request as FlaskRequest
 from flask import has_request_context, request
 
-from clio import ParamException
 from clio.utils.log import Log
-from clio.web import BusinessException, HttpResponse
-from clio.web.swagger import FlaskPydanticSpec
+
+from .exception.business_exception import BusinessException
+from .exception.param_exception import ParamException
+from .http_response import HttpResponse
+from .swagger import FlaskPydanticSpec
 
 
 def exception_handler(application: Flask, server_error_code: int = 500):
@@ -54,13 +56,11 @@ def cookies():
 
 
 def swagger_api(
-    app: Flask,
     backend_name="base",
     title="Flask",
     version="0.0.1",
-    register_router=True,
     **kwargs: Any,
-):
+) -> FlaskPydanticSpec:
     # api validator
     api_validator = FlaskPydanticSpec(
         backend_name, title=title, version=version, **kwargs
@@ -95,5 +95,4 @@ def swagger_api(
     FlaskRequest.http_headers = __http_headers
     FlaskRequest.http_cookies = __http_cookies
 
-    api_validator.register(app, register_router=register_router, **kwargs)
     return api_validator

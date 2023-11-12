@@ -1,9 +1,28 @@
 import re
-from typing import Any, Dict, Iterable, Mapping, NamedTuple, Optional, Type
+from typing import Any, Dict, Iterable, List, Mapping, NamedTuple, Optional, Type
 
 from clio.pydantics import BaseModel
 
 from .constants import OPENAPI_SCHEMA_TEMPLATE
+
+
+class ValidateErrorItem:
+    def __init__(
+        self,
+        name: str,
+        model_name,
+        errors,
+        value: Any,
+    ):
+        self.name = name
+        self.model_name = model_name
+        self.value = value
+        self.errors = errors
+
+
+class ValidateError(Exception):
+    def __init__(self, errors: List[ValidateErrorItem]):
+        self.errors = errors
 
 
 class ResponseBase:
