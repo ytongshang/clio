@@ -15,12 +15,18 @@ with open(os.path.join(here, "clio/version.py")) as fp:
 __version__ = version["__version__"]
 
 install_requires = [
+    # flask
     "flask",
-    "Flask[async]" "sqlalchemy",
+    'Flask"[async]"',
+    # sqlalchemy
+    "sqlalchemy",
+    "Flask-SQLAlchemy",
     "SQLAlchemy-serializer",
+    # base
     "pydantic",
     "inflection",
     "colorlog",
+    "aiohttp",
 ]
 
 setuptools.setup(
@@ -32,7 +38,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/microsoft/autogen",
-    packages=setuptools.find_packages(include=["autogen*"], exclude=["test"]),
+    packages=setuptools.find_packages(include=["clio*"], exclude=["test"]),
     # package_data={
     #     "autogen.default": ["*/*.json"],
     # },
