@@ -12,12 +12,13 @@ readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 description = "simple web framework based on flask"
 
 [project.urls]
-"Homepage" = "https://github.com/ytongshang/glimmer"
+"Homepage" = "https://github.com/ytongshang/clio"
 
 [tool.black]
 line-length = 88
