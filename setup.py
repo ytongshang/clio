@@ -17,7 +17,7 @@ __version__ = version["__version__"]
 install_requires = [
     # flask
     "flask",
-    'Flask"[async]"',
+    "Flask[async]",
     # sqlalchemy
     "sqlalchemy",
     "Flask-SQLAlchemy",
