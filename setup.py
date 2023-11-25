@@ -37,7 +37,7 @@ setuptools.setup(
     description="A python web framework based on flask and sqlalchemy",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/microsoft/autogen",
+    url="https://github.com/ytongshang/clio",
     packages=setuptools.find_packages(include=["clio*"], exclude=["test"]),
     # package_data={
     #     "autogen.default": ["*/*.json"],
