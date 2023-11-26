@@ -1,9 +1,12 @@
+import glob
 import logging
+import os
+from datetime import datetime
 
 import colorlog
 
 
-def _console_handler(_logger):
+def console_handler(logger):
     _formatter = colorlog.ColoredFormatter(
         "%(log_color)s%(asctime)s - %(levelname)5s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
@@ -17,12 +20,39 @@ def _console_handler(_logger):
     )
     _handler = logging.StreamHandler()
     _handler.setFormatter(_formatter)
-    _logger.addHandler(_handler)
-    _logger.setLevel(logging.DEBUG)
+    logger.addHandler(_handler)
+    logger.setLevel(logging.DEBUG)
+
+
+def file_handler(
+    logger,
+    log_dir,
+    file_max_keep_days=7,
+    logging_level=logging.DEBUG,
+    log_format="%(asctime)s | %(levelname)s | %(message)s",
+):
+    current_date = datetime.now()
+    for log_file in glob.glob(os.path.join(log_dir, "*.log")):
+        file_date_str = os.path.basename(log_file).split(".")[0]
+        file_date = datetime.strptime(file_date_str, "%Y_%m_%d")
+        days_difference = (current_date - file_date).days
+        if days_difference > file_max_keep_days:
+            try:
+                os.remove(log_file)
+            except Exception as e:
+                pass
+
+    time = datetime.now().strftime("%Y_%m_%d")
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    log_file_handler = logging.FileHandler(f"{log_dir}/{time}.log")
+    log_file_handler.setLevel(logging_level)
+    formatter = logging.Formatter(log_format)
+    log_file_handler.setFormatter(formatter)
+    logger.addHandler(log_file_handler)
 
 
 default_logger = logging.getLogger()
-_console_handler(default_logger)
 
 
 class Log:

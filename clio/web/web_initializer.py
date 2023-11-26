@@ -6,15 +6,23 @@ from clio.utils.log import Log
 
 from .exception.business_exception import BusinessException
 from .exception.param_exception import ParamException
+from .exception.rpc_exception import RpcException
 from .http_response import HttpResponse
 from .swagger import FlaskPydanticSpec
 
 
-def exception_handler(application: Flask, server_error_code: int = 500):
+def exception_handler(
+    application: Flask, server_error_code: int = 500, rpc_error_code: int = 500
+):
     @application.errorhandler(BusinessException)
     def business_error_handler(error):
         Log.error("business error: %s", error)
         return HttpResponse.failure(error.code, error.message).to_json()
+
+    @application.errorhandler(RpcException)
+    def rpc_error_handler(error):
+        Log.error("rpc error: %s", error)
+        return HttpResponse.failure(rpc_error_code, error.message).to_json()
 
     @application.errorhandler(Exception)
     def custom_error_handler(error):

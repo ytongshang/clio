@@ -1,10 +1,15 @@
+import asyncio
 import logging
+import os
+import shutil
 from typing import Any, Callable, Literal, Optional
 from urllib.parse import urlencode, urlparse, urlunparse
 
 import aiohttp
 
 __logger__ = logging.getLogger()
+
+from clio import Log
 
 
 class HttpException(Exception):
@@ -106,3 +111,44 @@ async def http_invoke(
         if verbose:
             __logger__.error(f"http 调用 {request_url_str} 失败, {e}")
         raise e
+
+
+async def download_file(
+    url: str, save_path, delete_if_exists: bool = False, verbose: bool = True
+):
+    if not url:
+        raise HttpException("download url is empty")
+
+    if not save_path:
+        raise HttpException("save path is empty")
+
+    exists = os.path.exists(save_path)
+    is_file = os.path.isfile(save_path)
+    if not delete_if_exists and exists and is_file:
+        if verbose:
+            Log.info(f"download url[{url}] to path[{save_path}], file exists, skip")
+        return
+
+    if exists:
+        try:
+            if is_file:
+                os.remove(save_path)
+            else:
+                shutil.rmtree(save_path)
+        except Exception as e:
+            raise HttpException(f"delete file[{save_path}] error", e)
+
+    await asyncio.sleep(1)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                with open(save_path, "wb") as fd:
+                    while True:
+                        chunk = await resp.content.read(1024)
+                        if not chunk:
+                            break
+                        fd.write(chunk)
+                    fd.flush()
+    except Exception as e:
+        raise HttpException(f"download url[{url}] to path[{save_path}] error", e)
