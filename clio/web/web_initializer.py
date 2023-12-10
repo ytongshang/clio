@@ -12,8 +12,17 @@ from .swagger import FlaskPydanticSpec
 
 
 def exception_handler(
-    application: Flask, server_error_code: int = 500, rpc_error_code: int = 500
+    application: Flask,
+    server_error_code: int = 500,
+    rpc_error_code: int = 500,
+    not_found_code: int = 404,
 ):
+    @application.errorhandler(404)
+    def not_found_error_handler(error):
+        Log.error(f"404 not found: {request.url}", exc_info=False)
+        url = request.url
+        return HttpResponse.failure(not_found_code, f"路由错误: {url}").to_json()
+
     @application.errorhandler(BusinessException)
     def business_error_handler(error):
         Log.error("business error: %s", error)
