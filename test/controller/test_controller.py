@@ -46,7 +46,6 @@ async def test_api():
 
     resp = TestResp(e="e")
     Log.info("TEST")
-    await asyncio.sleep(1000000)
     return HttpResponse.success(resp)
 
 

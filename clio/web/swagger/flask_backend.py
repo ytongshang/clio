@@ -245,13 +245,13 @@ class FlaskBackend:
         before(request, response, req_validation_error_map, None)
         if req_validation_error_map:
             abort(response)  # type: ignore
-        response = await make_response(func(*args, **kwargs))
+        response = await make_response(await func(*args, **kwargs))
 
         if resp and resp.has_model() and getattr(resp, "validate"):
             model = resp.find_model(response.status_code)
             if model:
                 try:
-                    model.validate(response.get_json())
+                    model.validate(await response.get_json())
                 except ValidationError as err:
                     resp_validation_error = err
                     response = make_response(
