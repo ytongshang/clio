@@ -1,7 +1,6 @@
 from .exception.business_exception import BusinessException
 from .exception.param_exception import ParamException
 from .exception.rpc_exception import RpcException
-from .flask import hook_make_response
 from .http.http import (
     HttpException,
     RawResponse,
@@ -10,6 +9,7 @@ from .http.http import (
     http_invoke,
 )
 from .http_response import HttpResponse
+from .quart import hook_make_response
 from .swagger import *
 from .web_initializer import (
     exception_handler,

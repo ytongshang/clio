@@ -1,3 +1,4 @@
+import asyncio
 from test.api import api
 from test.model.test import TestBody, TestCookies, TestHeaders, TestQuery, TestResp
 
@@ -27,7 +28,7 @@ test_bp = Blueprint("test_bp", __name__, url_prefix="/test")
     resp=Response(HTTP_200=HttpResponse[TestResp]),
 )
 @logger
-def test_api():
+async def test_api():
     """测试接口
     eeee
     """
@@ -44,4 +45,14 @@ def test_api():
     Log.info(b)
 
     resp = TestResp(e="e")
+    Log.info("TEST")
+    await asyncio.sleep(1000000)
     return HttpResponse.success(resp)
+
+
+@test_bp.route("/test1", methods=["GET"])
+@logger
+async def test_api2():
+    print("test_api2")
+    await asyncio.sleep(1000000)
+    return HttpResponse.success(1)

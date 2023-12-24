@@ -1,13 +1,11 @@
-import gzip
-import json
 import logging
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Type
 
-from flask import Flask
-from flask import Request as FlaskRequest
-from flask import Response as FlaskResponse
-from flask import abort, jsonify, make_response, request
+from quart import Quart
+from quart import Request as FlaskRequest
+from quart import Response as FlaskResponse
+from quart import abort, jsonify, make_response, request
 from werkzeug.datastructures import Headers
 from werkzeug.routing import Rule, parse_converter_args
 
@@ -126,7 +124,7 @@ class FlaskBackend:
 
         return "".join(subs), parameters
 
-    def request_validation(
+    async def request_validation(
         self,
         flask_request: FlaskRequest,
         query: Optional[Type[BaseModel]],
@@ -139,29 +137,20 @@ class FlaskBackend:
             req_query = parse_multi_dict(raw_query)
         else:
             req_query = {}
+
         if (
             flask_request.content_type
             and "application/json" in flask_request.content_type
         ):
-            if (
-                flask_request.content_encoding
-                and "gzip" in flask_request.content_encoding
-            ):
-                raw_body = gzip.decompress(flask_request.stream.read()).decode(
-                    encoding="utf-8"
-                )
-                parsed_body = json.loads(raw_body)
-            else:
-                parsed_body = flask_request.get_json(silent=True) or {}
+            parsed_body = await flask_request.get_json(silent=True) or {}
         elif (
             flask_request.content_type
             and "multipart/form-data" in flask_request.content_type
         ):
-            parsed_body = (
-                parse_multi_dict(flask_request.form) if flask_request.form else {}
-            )
+            form_body = await flask_request.form or {}
+            parsed_body = parse_multi_dict(form_body)
         else:
-            parsed_body = flask_request.get_data() or {}
+            parsed_body = await flask_request.get_data() or {}
         req_headers: Optional[Headers] = flask_request.headers or None
         req_cookies: Optional[Mapping[str, str]] = flask_request.cookies or None
 
@@ -224,7 +213,7 @@ class FlaskBackend:
             FlaskContext(query=_query, body=_body, headers=_headers, cookies=_cookies),
         )
 
-    def validate(
+    async def validate(
         self,
         func: Callable,
         query: Optional[Type[BaseModel]],
@@ -239,7 +228,7 @@ class FlaskBackend:
     ) -> FlaskResponse:
         response, req_validation_error_map, resp_validation_error = None, None, None
         try:
-            self.request_validation(request, query, body, headers, cookies)
+            await self.request_validation(request, query, body, headers, cookies)
         except ValidateError as err:
             error_map = {}
             for error in err.errors:
@@ -249,14 +238,14 @@ class FlaskBackend:
                 }
             req_validation_error_map = error_map
 
-            response = make_response(
+            response = await make_response(
                 jsonify(error_map), self.config.VALIDATION_ERROR_CODE
             )
 
         before(request, response, req_validation_error_map, None)
         if req_validation_error_map:
             abort(response)  # type: ignore
-        response = make_response(func(*args, **kwargs))
+        response = await make_response(func(*args, **kwargs))
 
         if resp and resp.has_model() and getattr(resp, "validate"):
             model = resp.find_model(response.status_code)
@@ -273,58 +262,9 @@ class FlaskBackend:
 
         return response
 
-    async def async_validate(
-        self,
-        func: Callable,
-        query: Optional[Type[BaseModel]],
-        body: Optional[RequestBase],
-        headers: Optional[Type[BaseModel]],
-        cookies: Optional[Type[BaseModel]],
-        resp: Optional[ResponseBase],
-        before: Callable,
-        after: Callable,
-        *args: List[Any],
-        **kwargs: Mapping[str, Any],
-    ) -> FlaskResponse:
-        response, req_validation_error_map, resp_validation_error = None, None, None
-        try:
-            self.request_validation(request, query, body, headers, cookies)
-        except ValidateError as err:
-            error_map = {}
-            for error in err.errors:
-                error_map[error.name] = {
-                    "model": error.model_name,
-                    "errors": error.errors,
-                }
-            req_validation_error_map = error_map
-
-            response = make_response(
-                jsonify(error_map), self.config.VALIDATION_ERROR_CODE
-            )
-
-        before(request, response, req_validation_error_map, None)
-        if req_validation_error_map:
-            abort(response)  # type: ignore
-        response = make_response(await func(*args, **kwargs))
-
-        if resp and resp.has_model() and getattr(resp, "validate"):
-            model = resp.find_model(response.status_code)
-            if model:
-                try:
-                    model.validate(response.get_json())
-                except ValidationError as err:
-                    resp_validation_error = err
-                    response = make_response(
-                        jsonify({"message": "response validation error"}), 500
-                    )
-
-        after(request, response, resp_validation_error, None)
-
-        return response
-
-    def register_route(self, app: Flask) -> None:
+    def register_route(self, app: Quart) -> None:
         self.app = app
-        from flask import jsonify
+        from quart import jsonify
 
         self.app.add_url_rule(
             self.config.spec_url,
@@ -340,7 +280,7 @@ class FlaskBackend:
             )
 
 
-def _parse_custom_url_converter(converter: str, app: Flask) -> Optional[Dict[str, Any]]:
+def _parse_custom_url_converter(converter: str, app: Quart) -> Optional[Dict[str, Any]]:
     """Attempt derive a schema from a custom URL converter."""
     try:
         converter_cls = app.url_map.converters[converter]

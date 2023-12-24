@@ -4,9 +4,9 @@ from copy import deepcopy
 from functools import wraps
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Type, Union
 
-from flask import Flask
-from flask import Response as FlaskResponse
 from inflection import camelize
+from quart import Quart
+from quart import Response as FlaskResponse
 
 from clio.pydantics import BaseModel
 
@@ -64,7 +64,7 @@ class FlaskPydanticSpec:
         # init
         self.models: Dict[str, Any] = {}
 
-    def register(self, app: Flask, register_router=True) -> None:
+    def register(self, app: Quart, register_router=True) -> None:
         """
         register to backend application
 
@@ -140,42 +140,28 @@ class FlaskPydanticSpec:
 
         def decorate_validation(func: Callable) -> Callable:
             is_async = FlaskPydanticSpec.is_async_function(func)
-            if is_async:
 
-                @wraps(func)
-                async def async_validate(*args: Any, **kwargs: Any) -> FlaskResponse:
-                    return await self.backend.async_validate(
-                        func,
-                        query,
-                        body if isinstance(body, RequestBase) else Request(body),
-                        headers,
-                        cookies,
-                        resp,
-                        before or self.before,
-                        after or self.after,
-                        *args,
-                        **kwargs,
-                    )
+            if not is_async:
+                raise RuntimeError(
+                    "Quart Only support async function for now, please use `async def`"
+                )
 
-                validation = async_validate
-            else:
+            @wraps(func)
+            async def async_validate(*args: Any, **kwargs: Any) -> FlaskResponse:
+                return await self.backend.validate(
+                    func,
+                    query,
+                    body if isinstance(body, RequestBase) else Request(body),
+                    headers,
+                    cookies,
+                    resp,
+                    before or self.before,
+                    after or self.after,
+                    *args,
+                    **kwargs,
+                )
 
-                @wraps(func)
-                def sync_validate(*args: Any, **kwargs: Any) -> FlaskResponse:
-                    return self.backend.validate(
-                        func,
-                        query,
-                        body if isinstance(body, RequestBase) else Request(body),
-                        headers,
-                        cookies,
-                        resp,
-                        before or self.before,
-                        after or self.after,
-                        *args,
-                        **kwargs,
-                    )
-
-                validation = sync_validate
+            validation = async_validate
 
             # register
             for name, model in zip(

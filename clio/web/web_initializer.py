@@ -1,6 +1,6 @@
 from typing import Any, Literal
 
-from flask import Flask, has_request_context, request
+from quart import Quart, has_request_context, request
 
 from clio.utils.log import Log
 
@@ -12,7 +12,7 @@ from .swagger import FlaskPydanticSpec
 
 
 def exception_handler(
-    application: Flask,
+    application: Quart,
     server_error_code: int = 500,
     rpc_error_code: int = 500,
     not_found_code: int = 404,
@@ -25,7 +25,7 @@ def exception_handler(
 
     @application.errorhandler(BusinessException)
     def business_error_handler(error):
-        Log.error("business error: %s", error)
+        Log.error(f"business error: {error}")
         return HttpResponse.failure(error.code, error.message).to_json()
 
     @application.errorhandler(RpcException)
@@ -35,7 +35,7 @@ def exception_handler(
 
     @application.errorhandler(Exception)
     def custom_error_handler(error):
-        Log.error("custom error: %s", error)
+        Log.error(f"custom error: %s, error_details:{error}")
         return HttpResponse.failure(server_error_code, str(error)).to_json()
 
 

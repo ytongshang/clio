@@ -59,7 +59,7 @@ async def http_invoke(
                 try:
                     query_string = urlencode(query)
                     new_url_parts = request_url._replace(query=query_string)
-                    request_url_str = urlunparse(new_url_parts)
+                    request_url_str = str(urlunparse(new_url_parts))
                 except Exception as e:
                     raise HttpException(f"query参数错误: {query}", e)
 
