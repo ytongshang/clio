@@ -2,7 +2,7 @@ import asyncio
 from test.api import api
 from test.model.test import TestBody, TestCookies, TestHeaders, TestQuery, TestResp
 
-from flask import Blueprint
+from quart import Blueprint
 
 from clio import (
     HttpResponse,

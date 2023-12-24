@@ -1,3 +1,5 @@
+import gzip
+import json
 import logging
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Type
@@ -142,7 +144,16 @@ class FlaskBackend:
             flask_request.content_type
             and "application/json" in flask_request.content_type
         ):
-            parsed_body = await flask_request.get_json(silent=True) or {}
+            if (
+                flask_request.content_encoding
+                and "gzip" in flask_request.content_encoding
+            ):
+                raw_body = gzip.decompress(await flask_request.data).decode(
+                    encoding="utf-8"
+                )
+                parsed_body = json.loads(raw_body)
+            else:
+                parsed_body = await flask_request.get_json(silent=True) or {}
         elif (
             flask_request.content_type
             and "multipart/form-data" in flask_request.content_type
