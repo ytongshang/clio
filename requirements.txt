@@ -50,3 +50,6 @@ virtualenv==20.25.0
 Werkzeug==3.0.1
 wsproto==1.2.0
 yarl==1.9.4
+Flask-SQLAlchemy==3.1.1
+quart-flask-patch==0.3.0
+PyMySQL==1.1.0

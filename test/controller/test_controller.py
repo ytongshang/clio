@@ -1,5 +1,5 @@
-import asyncio
 from test.api import api
+from test.database import Members, db
 from test.model.test import TestBody, TestCookies, TestHeaders, TestQuery, TestResp
 
 from quart import Blueprint
@@ -53,5 +53,6 @@ async def test_api():
 @logger
 async def test_api2():
     print("test_api2")
-    await asyncio.sleep(1000000)
+    users = db.session.query(Members).all()
+    print(users)
     return HttpResponse.success(1)

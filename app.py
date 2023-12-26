@@ -1,5 +1,6 @@
 from test.api import api
 from test.controller.test_controller import test_bp
+from test.database import init_database
 
 from quart import Quart
 
@@ -9,6 +10,7 @@ hook_make_response()
 hack_json()
 
 app = Quart(__name__)
+init_database(app)
 api.register(app)
 app.register_blueprint(test_bp)
 exception_handler(app)
