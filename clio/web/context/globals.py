@@ -8,7 +8,7 @@ from .ctx import RequestContext
 from .errors import ContextDoesNotExistError
 
 _request_scope_context_storage: ContextVar[RequestContext] = ContextVar(
-    "starlette_request_context"
+    "clio_request_context"
 )
 
 

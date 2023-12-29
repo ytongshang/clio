@@ -13,13 +13,15 @@ from example.database.database import db
 def create_app():
     application = FastAPI()
     register_exception_handler(application)
-    application.add_middleware(
-        RawContextMiddleware,
-    )
+
     application.include_router(test_api_router)
 
     # database
     init_database(application)
+
+    application.add_middleware(
+        RawContextMiddleware,
+    )
     return application
 
 
