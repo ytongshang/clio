@@ -5,7 +5,7 @@ packages = [
     "aiohttp",
     "sqlalchemy",
     "SQLAlchemy-serializer",
-    "quart",
+    "fastapi",
     "hypercorn",
     # 基础包
     "colorlog",
