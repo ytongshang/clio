@@ -10,7 +10,7 @@ from .http.http import (
     http_invoke,
 )
 from .http_response import HttpResponse
-from .web_initializer import exception_handler
+from .web_initializer import register_exception_handler
 
 __all__ = [
     # Exception
@@ -20,7 +20,7 @@ __all__ = [
     # HttpResponse
     "HttpResponse",
     # web initializer
-    "exception_handler",
+    "register_exception_handler",
     # http
     "RawResponse",
     "HttpException",

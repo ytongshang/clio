@@ -3,10 +3,12 @@ import subprocess
 packages = [
     # http
     "aiohttp",
-    "sqlalchemy",
-    "SQLAlchemy-serializer",
     "fastapi",
     "hypercorn",
+    # mysql
+    "sqlalchemy",
+    "SQLAlchemy-serializer",
+    "pymysql",
     # 基础包
     "colorlog",
     "pydantic",
@@ -18,9 +20,7 @@ packages = [
     "autoflake",
 ]
 
-skynet_log_version = "0.0.2"
-
 subprocess.run("pip install --upgrade pip", shell=True)
 for package in packages:
-    print(f"installing {package}")
+    print(f"----------------------installing {package}----------------------")
     subprocess.run(f"pip install {package}", shell=True)

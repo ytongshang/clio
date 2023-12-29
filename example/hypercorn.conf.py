@@ -9,8 +9,7 @@ bind = "0.0.0.0:8000"
 
 # workers
 num_cpu = os.cpu_count() or 1
-workers = 1
-workers = workers
+workers = 2 * int(num_cpu) + 1
 
 # keepalive
 keep_alive_timeout = 2

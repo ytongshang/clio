@@ -1,1 +1,1 @@
-hypercorn --config file:hypercorn.conf.py  app:app
+hypercorn --config file:example/hypercorn.conf.py example.app:app

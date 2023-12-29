@@ -5,6 +5,8 @@ from datetime import datetime
 
 import colorlog
 
+default_logger = logging.getLogger()
+
 
 def console_handler(logger):
     _formatter = colorlog.ColoredFormatter(
@@ -50,9 +52,6 @@ def file_handler(
     formatter = logging.Formatter(log_format)
     log_file_handler.setFormatter(formatter)
     logger.addHandler(log_file_handler)
-
-
-default_logger = logging.getLogger()
 
 
 class Log:
