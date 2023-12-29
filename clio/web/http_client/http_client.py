@@ -7,7 +7,7 @@ from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import aiohttp
 
-from clio import Log
+from clio.utils import Log
 
 
 class HttpException(Exception):
