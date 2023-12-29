@@ -15,12 +15,11 @@ with open(os.path.join(here, "clio/version.py")) as fp:
 __version__ = version["__version__"]
 
 install_requires = [
-    # flask
-    "flask",
-    "Flask[async]",
+    # fastapi
+    "fastapi",
+    "hypercorn",
     # sqlalchemy
     "sqlalchemy",
-    "Flask-SQLAlchemy",
     "SQLAlchemy-serializer",
     # base
     "pydantic",

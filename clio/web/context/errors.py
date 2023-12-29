@@ -1,8 +1,4 @@
-class StarletteContextError(Exception):
-    pass
-
-
-class ContextDoesNotExistError(RuntimeError, StarletteContextError):
+class ContextDoesNotExistError(RuntimeError):
     def __init__(self):
         self.message = (
             "You didn't use the required middleware or "

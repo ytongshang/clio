@@ -21,8 +21,7 @@ app.add_middleware(
 )
 app.include_router(test_api_router)
 
-
 if __name__ == "__main__":
-    config = Config()
-    config.bind = ["localhost:8000"]
+    config = Config.from_pyfile("hypercorn.conf.py")
+    config.use_reloader = True
     asyncio.run(serve(app, config))

@@ -9,8 +9,6 @@ packages = [
     "hypercorn",
     # 基础包
     "colorlog",
-    "jsonschema",
-    "inflection",
     "pydantic",
     # 代码格式
     "pre-commit",

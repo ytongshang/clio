@@ -15,6 +15,7 @@ workers = workers
 # keepalive
 keep_alive_timeout = 2
 
+# headers
 include_server_header = False
 
 # hypercorn.logging.Logger

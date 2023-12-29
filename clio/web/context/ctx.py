@@ -4,25 +4,23 @@ from typing import Any, Dict, Optional
 
 from starlette.requests import Request
 
-from clio.web.context.errors import ContextDoesNotExistError
-
 
 class RequestContext:
-    def __init__(self, request: Request, data: Optional[Dict[str, Any]] = None):  # noqa
-        self.data: Dict[str, Any] = data or {}
+    def __init__(self, request: Request, data: Optional[Dict[str, Any]] = None):
+        self._data: Dict[str, Any] = data or {}
         self._request = request
 
     def get(self, key: str, default: Any = None) -> Any:
         """Get value from context."""
-        return self.data.get(key, default)
+        return self._data.get(key, default)
 
-    def set(self, key: str, value: Any) -> None:
+    def set(self, key: str, value: Any):
         """Set value in context."""
-        self.data[key] = value
+        self._data[key] = value
 
-    def remove(self, key: str) -> None:
-        """Remove value from context."""
-        self.data.pop(key, None)
+    def remove(self, key: str) -> Any:
+        """Remove value from context and return the old value."""
+        return self._data.pop(key, None)
 
     @property
     def request(self) -> Request:
@@ -30,20 +28,9 @@ class RequestContext:
 
     def copy(self) -> RequestContext:
         return self.__class__(
-            data=self.data.copy(),
             request=self._request,
+            data=self._data.copy(),
         )
 
-    def __repr__(self) -> str:
-        # Opaque type to avoid default implementation
-        # that could try to look into data while out of request cycle
-        try:
-            return f"<{__name__}.{self.__class__.__name__} {self.data}>"
-        except ContextDoesNotExistError:
-            return f"<{__name__}.{self.__class__.__name__} {dict()}>"
-
     def __str__(self):
-        try:
-            return str(self.data)
-        except ContextDoesNotExistError:
-            return str({})
+        return str(self._data)

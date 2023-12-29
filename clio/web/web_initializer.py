@@ -1,9 +1,7 @@
 from fastapi import FastAPI
-from starlette.requests import Request
 
 from clio.utils.log import Log
 
-from .context import request
 from .exception.business_exception import BusinessException
 from .exception.rpc_exception import RpcException
 from .http_response import HttpResponse
@@ -16,23 +14,24 @@ def exception_handler(
     not_found_code: int = 404,
 ):
     @application.exception_handler(404)
-    def not_found_error_handler(error):
-        req: Request = request()
-        url = req.url
-        Log.error(f"404 not found: {req.url}", exc_info=False)
-        return HttpResponse.failure(not_found_code, f"路由错误: {url}").to_json()
+    def not_found_error_handler(request, exc):
+        url = request.url
+        msg = f"404 not found: {url}"
+        Log.error(msg, exc_info=False)
+        return HttpResponse.failure(not_found_code, msg).to_json()
 
     @application.exception_handler(BusinessException)
-    def business_error_handler(error):
-        Log.error(f"business error: {error}")
-        return HttpResponse.failure(error.code, error.message).to_json()
+    def business_error_handler(request, exc):
+        Log.error(f"business error: {exc}")
+        return HttpResponse.failure(exc.code, exc.message).to_json()
 
     @application.exception_handler(RpcException)
-    def rpc_error_handler(error):
-        Log.error("rpc error: %s", error)
-        return HttpResponse.failure(rpc_error_code, error.message).to_json()
+    def rpc_error_handler(request, exc):
+        Log.error(f"rpc error: {exc}")
+        return HttpResponse.failure(rpc_error_code, exc.message).to_json()
 
     @application.exception_handler(Exception)
-    def custom_error_handler(error):
-        Log.error(f"custom error: %s, error_details:{error}")
-        return HttpResponse.failure(server_error_code, str(error)).to_json()
+    def custom_error_handler(request, exc):
+        error_msg = str(exc)
+        Log.error(f"custom error: {error_msg}")
+        return HttpResponse.failure(server_error_code, error_msg).to_json()

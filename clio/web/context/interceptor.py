@@ -17,7 +17,7 @@ class Interceptor(metaclass=abc.ABCMeta):
         Extracts value from header by default.
         """
 
-    async def enrich_response(self, response: Message):
+    async def process_response(self, response: Message):
         """Runs always on response.
 
         Does nothing by default.

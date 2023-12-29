@@ -30,6 +30,6 @@ __all__ = [
     # context
     "RequestContext",
     "has_request_context",
-    "request",
     "request_context",
+    "request",
 ]

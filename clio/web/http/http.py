@@ -93,7 +93,6 @@ async def http_invoke(
                     if verbose:
                         Log.debug(f"resp: {resp}")
                     return RawResponse(response_headers, resp, response.status)
-
             except Exception as e:
                 raise HttpException(f"请求 URL[{url}] 错误", e)
     except Exception as e:
