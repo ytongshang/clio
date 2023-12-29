@@ -1,4 +1,4 @@
-from clio.pydantics import BaseModel, Field
+from pydantic import BaseModel, Field
 
 
 class TestQuery(BaseModel):

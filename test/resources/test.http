@@ -1,5 +1,5 @@
 ###
-POST http://localhost:8101/test/test?a=1
+POST http://localhost:8000/test/test
 Content-Type: application/json
 c: eeee
 cookie: d=1
