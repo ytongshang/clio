@@ -3,32 +3,48 @@ import asyncio
 from fastapi import FastAPI
 from hypercorn import Config
 from hypercorn.asyncio import serve
+from starlette.middleware import Middleware
+from starlette.responses import RedirectResponse
 
-from clio import SessionMiddleware, register_exception_handler
+from clio import SessionMiddleware, common_exception_handlers
 from clio.web.context.middleware import RawContextMiddleware
 from example.controller.test_controller import test_api_router
 from example.database.database import db
 
 
 def create_app():
-    application = FastAPI()
-    register_exception_handler(application)
+    # database
+    init_database()
 
+    # exception handlers
+    exception_handlers = common_exception_handlers()
+
+    # middlewares
+    middlewares = [
+        Middleware(RawContextMiddleware),
+        Middleware(
+            SessionMiddleware,
+            sqlalchemy=db,
+        ),
+    ]
+
+    application = FastAPI(
+        exception_handlers=exception_handlers, middlewares=middlewares
+    )
+
+    # routers
     application.include_router(test_api_router)
 
-    # database
-    init_database(application)
+    @application.get("/")
+    async def home():
+        return RedirectResponse(url="/docs")
 
-    application.add_middleware(
-        RawContextMiddleware,
-    )
     return application
 
 
-def init_database(application: FastAPI = None):
+def init_database():
     from example.database import entity  # noqa
 
-    application.add_middleware(SessionMiddleware, sqlalchemy=db)
     db.create_all()
 
 
