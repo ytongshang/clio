@@ -1,6 +1,5 @@
 from .context import RequestContext, has_request_context, request, request_context
 from .exception import BusinessException, ParamException, RpcException
-from .extension import SessionMiddleware, SQLAlchemy
 from .http_client import (
     HttpException,
     RawResponse,
@@ -9,6 +8,7 @@ from .http_client import (
     http_invoke,
 )
 from .http_response import HttpResponse
+from .orm import SessionMiddleware, SQLAlchemy
 from .web_initializer import common_exception_handlers
 
 __all__ = [

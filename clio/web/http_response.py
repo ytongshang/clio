@@ -1,12 +1,12 @@
 from typing import Generic, Optional, TypeVar
 
-from clio.pydantics import Field, GenericModel
+from clio.pydantics import BaseModel, Field
 from clio.utils import object_to_json
 
 T = TypeVar("T")
 
 
-class HttpResponse(GenericModel, Generic[T]):
+class HttpResponse(BaseModel, Generic[T]):
     code: int = Field(-1, description="错误码")
     message: str = Field("", description="错误信息")
     data: Optional[T] = Field(..., description="返回数据")

@@ -1,9 +1,5 @@
-import asyncio
-
+import uvicorn
 from fastapi import FastAPI
-from hypercorn import Config
-from hypercorn.asyncio import serve
-from starlette.middleware import Middleware
 from starlette.responses import RedirectResponse
 
 from clio import SessionMiddleware, common_exception_handlers
@@ -16,21 +12,12 @@ def create_app():
     # database
     init_database()
 
-    # exception handlers
-    exception_handlers = common_exception_handlers()
-
-    # middlewares
-    middlewares = [
-        Middleware(RawContextMiddleware),
-        Middleware(
-            SessionMiddleware,
-            sqlalchemy=db,
-        ),
-    ]
-
     application = FastAPI(
-        exception_handlers=exception_handlers, middlewares=middlewares
+        exception_handlers=common_exception_handlers(),
     )
+    # middlewares,后加的先执行
+    application.add_middleware(SessionMiddleware, sqlalchemy=db)
+    application.add_middleware(RawContextMiddleware)
 
     # routers
     application.include_router(test_api_router)
@@ -43,7 +30,7 @@ def create_app():
 
 
 def init_database():
-    from example.database import entity  # noqa
+    from example.database import models  # noqa
 
     db.create_all()
 
@@ -51,7 +38,4 @@ def init_database():
 app = create_app()
 
 if __name__ == "__main__":
-    config = Config.from_pyfile("hypercorn.conf.py")
-    config.use_reloader = True
-    config.workers = 1
-    asyncio.run(serve(app, config))
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)

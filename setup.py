@@ -37,7 +37,9 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ytongshang/clio",
-    packages=setuptools.find_packages(include=["clio*"], exclude=["test"]),
+    packages=setuptools.find_packages(
+        include=["clio*"], exclude=["example*", "app.py", "init_packages.py"]
+    ),
     # package_data={
     #     "autogen.default": ["*/*.json"],
     # },

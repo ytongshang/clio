@@ -20,8 +20,8 @@ class SessionMiddleware:
 
         req = Request(scope)
         try:
-            session = self.sqlalchemy.SessionLocal()
-            req.state.db = session
             await self.app(scope, receive, send)
         finally:
-            req.state.db.close()
+            state = req.state
+            if hasattr(state, "db_session"):
+                state.db_session.close()

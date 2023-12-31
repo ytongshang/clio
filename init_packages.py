@@ -4,10 +4,8 @@ packages = [
     # http
     "aiohttp",
     "fastapi",
-    "hypercorn",
     # mysql
-    "sqlalchemy",
-    "SQLAlchemy-serializer",
+    "sqlmodel",
     "pymysql",
     # 基础包
     "colorlog",
@@ -21,6 +19,8 @@ packages = [
 ]
 
 subprocess.run("pip install --upgrade pip", shell=True)
+print(f'----------------------installing {"uvicorn[standard]"}----------------------')
+subprocess.run('pip install "uvicorn[standard]" ', shell=True)
 for package in packages:
     print(f"----------------------installing {package}----------------------")
     subprocess.run(f"pip install {package}", shell=True)
