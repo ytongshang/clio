@@ -61,7 +61,7 @@ def common_exception_handlers(
 
     async def custom_error_handler(request, exc: Exception):
         error_msg = str(exc)
-        Log.error(f"custom error: {error_msg}")
+        Log.error(f"custom error: {error_msg}", exc_info=False)
         return JSONResponse(
             status_code=HTTP_200_OK,
             content=HttpResponse.failure(server_error_code, error_msg),

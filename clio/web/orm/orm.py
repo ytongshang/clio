@@ -1,6 +1,7 @@
 from typing import Any, Callable
 
 from sqlalchemy import Engine
+from sqlalchemy.orm import Query
 from sqlmodel import Session, SQLModel, create_engine
 from starlette.requests import Request
 
@@ -47,6 +48,7 @@ class SQLAlchemy:
             req.state.db_session = self.SessionMaker()
             return req.state.db_session
 
-    def get_session(self):
-        with self.SessionMaker() as session:
-            yield session
+    def query(self, *entities, **kwargs) -> Query:
+        """使用老的SqlAlchemy的query方法"""
+        _session = self.session
+        return _session.query(*entities, **kwargs)

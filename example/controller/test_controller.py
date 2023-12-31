@@ -82,3 +82,22 @@ async def test_filter_filter2() -> HttpResponse[List[Hero]]:
         select(Hero).where(or_(col(Hero.id) > 10, Hero.name == "Deadpond"))
     ).all()
     return HttpResponse.success(heroes1 + heroes2 + heroes3)
+
+
+@test_api_router.get("/db/query")
+async def test_query() -> HttpResponse[List[Hero]]:
+    heroes1 = db.query(Hero).filter(Hero.id > 10).all()
+    print(heroes1)
+    return HttpResponse.success(heroes1)
+
+
+@test_api_router.get("/db/update")
+async def test_update() -> HttpResponse[List[Hero]]:
+    first = db.query(Hero).filter_by(id=1).first()
+    resp = []
+    if first:
+        first.name = "test"
+        db.session.commit()
+        db.session.refresh(first)
+        resp.append(first)
+    return HttpResponse.success(resp)

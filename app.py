@@ -2,10 +2,12 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.responses import RedirectResponse
 
-from clio import SessionMiddleware, common_exception_handlers
+from clio import SessionMiddleware, common_exception_handlers, hack_json
 from clio.web.context.middleware import RawContextMiddleware
 from example.controller.test_controller import test_api_router
 from example.database.database import db
+
+hack_json()
 
 
 def create_app():
