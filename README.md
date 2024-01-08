@@ -1,6 +1,76 @@
 # clio
 
-## 数据库
+## RawContextMiddleware
+
+- 像flask一样可以在任何地方获取当前请求的request对象
+
+### 如何使用
+
+- **添加RawContextMiddleware，需要添加到FastAPI拦截器的最后一个，FastAPI拦截器后添加的拦截器，最先执行**
+
+```python
+application = FastAPI()
+application.add_middleware(SessionMiddleware, sqlalchemy=db)
+application.add_middleware(RawContextMiddleware)
+```
+
+- 获取request
+
+```python
+from clio.web import request
+
+current_request = request()
+```
+
+- 获取requestContext,可以在middleware中向requestContext中添加数据，在其它任何地方获取这个值，但要注意值添加的顺序，如果代码是在middleware之前执行，那么获取的值是空的
+
+```python
+from clio.web import request_context
+
+current_request_context = request_context()
+current_request_context.set("key", "value")
+current_request_context.get("key")
+current_request_context.remove("key")
+```
+
+## SessionMiddleware
+- 支持全局获取db.session,session生命周期与request一致
+
+### 如何使用
+
+- 初始化数据库
+```python
+import os
+from clio import SQLAlchemy
+
+database_uri = os.environ.get("DATABASE_URI")
+db = SQLAlchemy(database_uri or "", echo=True)
+```
+
+- 添加SessionMiddleware
+
+```python
+application.add_middleware(SessionMiddleware, sqlalchemy=db)
+```
+
+- 任何地方获取session
+
+```python
+session = db.session
+```
+
+- 可以使用sqlachemy的query的方式操作数据库，也支持dbModel的select的方式操作
+
+```python
+# dbModel
+heroes = db.session.exec(select(Hero).where(col(Hero.id) > 10)).all()
+
+## sqlachemy的query
+first = db.query(Hero).filter_by(id=1).first()
+```
+
+
+## SQLMODEL 数据库
 
 ### add
 
