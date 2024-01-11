@@ -3,8 +3,6 @@ from json import JSONEncoder
 from typing import Any, Callable, Dict, Optional, Set, Union
 
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel
-from pydantic.v1 import BaseModel as BaseModelV1
 
 IncEx = Union[Set[int], Set[str], Dict[int, Any], Dict[str, Any]]
 
@@ -68,10 +66,6 @@ def object_to_json(
 def hack_json():
     # type: ignore
     def _default(self, obj):
-        if isinstance(obj, BaseModel):
-            return obj.model_dump()
-        if isinstance(obj, BaseModelV1):
-            return obj.dict()
         return object_to_json(obj)
 
     _default.default = JSONEncoder.default  # type: ignore
