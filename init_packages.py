@@ -7,6 +7,7 @@ packages = [
     # mysql
     "sqlmodel",
     "pymysql",
+    "alembic",
     # 基础包
     "colorlog",
     "pydantic",
