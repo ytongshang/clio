@@ -34,11 +34,13 @@ current_request_context.remove("key")
 ```
 
 ## SessionMiddleware
+
 - 支持全局获取db.session,session生命周期与request一致
 
 ### 如何使用
 
 - 初始化数据库
+
 ```python
 import os
 from clio import SQLAlchemy
@@ -68,7 +70,6 @@ heroes = db.session.exec(select(Hero).where(col(Hero.id) > 10)).all()
 ## sqlachemy的query
 first = db.query(Hero).filter_by(id=1).first()
 ```
-
 
 ## SQLMODEL 数据库
 
@@ -135,16 +136,27 @@ heroes4 = db.session.exec(select(Hero).where(or_(col(Hero.id) > 10, Hero.name ==
 
 ## alembic
 
+- env.py新增sqlmodel的metadata
+  - import SQLModel
+  - import SqlModel的model
+  - target_metadata = SQLModel.metadata
+  - config.set_main_option("sqlalchemy.url", uri)
+
 ```python
+import os
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from sqlmodel import SQLModel  
+
+from sqlmodel import SQLModel  # NewAdded
+from example.database.models import Hero  # NewAdded
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+uri = os.environ.get("DATABASE_URI")  # NewAdded
+config.set_main_option("sqlalchemy.url", uri)  # NewAdded
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -155,12 +167,47 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = SQLModel.metadata
+target_metadata = SQLModel.metadata  # NewAdded
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+```
+
+- script.py.mako新增SqlModel的import
+
+```python
+"""${message}
+
+Revision ID: ${up_revision}
+Revises: ${down_revision | comma,n}
+Create Date: ${create_date}
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+import sqlmodel  # NewAdded
+${imports if imports else ""}
+
+# revision identifiers, used by Alembic.
+revision: str = ${repr(up_revision)}
+down_revision: Union[str, None] = ${repr(down_revision)}
+branch_labels: Union[str, Sequence[str], None] = ${repr(branch_labels)}
+depends_on: Union[str, Sequence[str], None] = ${repr(depends_on)}
+
+
+def upgrade() -> None:
+    ${upgrades if upgrades else "pass"}
+
+
+def downgrade() -> None:
+    ${downgrades if downgrades else "pass"}
 
 ```
+
+- .env修改DATABASE_URI
+
 
