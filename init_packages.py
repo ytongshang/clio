@@ -6,7 +6,7 @@ packages = [
     "fastapi",
     # mysql
     "sqlmodel",
-    "pymysql",
+    "psycopg2-binary",
     "alembic",
     # 基础包
     "colorlog",
