@@ -136,11 +136,11 @@ heroes4 = db.session.exec(select(Hero).where(or_(col(Hero.id) > 10, Hero.name ==
 
 ## alembic
 
-- env.py新增sqlmodel的metadata
-  - import SQLModel
-  - import SqlModel的model
-  - target_metadata = SQLModel.metadata
-  - config.set_main_option("sqlalchemy.url", uri)
+### env.py新增sqlmodel的metadata
+- import SQLModel
+- import SqlModel的model
+- target_metadata = SQLModel.metadata
+- config.set_main_option("sqlalchemy.url", uri)
 
 ```python
 import os
@@ -175,7 +175,7 @@ target_metadata = SQLModel.metadata  # NewAdded
 # ... etc.
 ```
 
-- script.py.mako新增SqlModel的import
+### script.py.mako新增SqlModel的import
 
 ```python
 """${message}
@@ -208,6 +208,27 @@ def downgrade() -> None:
 
 ```
 
-- .env修改DATABASE_URI
+### .env修改DATABASE_URI
 
+### 创建创建迁移脚本,需要自己写逻辑
 
+```python
+alembic revision -m "create account table"
+```
+
+### 执行迁移
+    - head 代表最新的版本
+    - 可以加具体的版本号，如：alembic upgrade 1a2b3c4d5e6f
+    - 从当前移动两个版本，可以提供十进制值“+N”或“-N”作为版本号，如：alembic upgrade +2
+    - 降级，alembic downgrade -1
+
+```python
+alembic upgrade head
+```
+
+### 自动生成迁移脚本
+- 需要指定target_metadata = SQLModel.metadata
+
+```python
+alembic revision --autogenerate -m "create account table"
+```
