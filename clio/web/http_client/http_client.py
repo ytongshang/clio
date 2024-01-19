@@ -2,12 +2,18 @@ import asyncio
 import hashlib
 import os
 import shutil
-from typing import Any, Callable, Dict, Literal, Optional
+import time
+from typing import Any, Callable, Dict, Literal, Optional, Union
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
-import aiohttp
+import httpx
+from httpx import URL, Proxy
 
 from clio.utils import Log
+
+URLTypes = Union[URL, str]
+ProxyTypes = Union[URLTypes, Proxy]
+ProxiesTypes = Union[ProxyTypes, Dict[URLTypes, Union[None, ProxyTypes]]]
 
 
 class HttpException(Exception):
@@ -28,26 +34,62 @@ class RawResponse:
         self.status_code = status_code
 
 
+def url_append_query(url: str, query: Optional[Dict[str, Any]]) -> str:
+    request_url_str = url
+    try:
+        url_parts = urlparse(url)
+    except Exception as e:
+        raise HttpException(f"parse url[{url}] error", e)
+
+    if query is not None:
+        try:
+            original_query = parse_qs(url_parts.query)
+            original_query.update(query)
+            encoded_query = urlencode(original_query, doseq=True)
+            new_url_parts = url_parts._replace(query=encoded_query)
+            new_url = urlunparse(new_url_parts)
+            request_url_str = str(new_url)
+        except Exception as e:
+            raise HttpException(f"parse query[{query}] error", e)
+    return request_url_str
+
+
+def file_name_generator(file_name: str):
+    suffix_index = file_name.rfind(".")
+    if suffix_index != -1:
+        file_name_prefix = file_name[:suffix_index]
+        suffix = file_name[suffix_index + 1 :]
+        md5_hash = hashlib.md5()
+        md5_hash.update(file_name_prefix.encode())
+        digest = md5_hash.hexdigest()
+        return f"{digest}.{suffix}"
+    else:
+        md5_hash = hashlib.md5()
+        md5_hash.update(file_name.encode())
+        digest = md5_hash.hexdigest()
+        return digest
+
+
 def default_valid_status(status_code: int) -> bool:
     return 200 == status_code
 
 
-# noinspection DuplicatedCode,PyShadowingNames
+# noinspection DuplicatedCode
 async def http_invoke(
     url: str,
     method: Literal["GET", "POST", "DELETE", "PUT", "HEAD", "OPTIONS"] = "GET",
     query: Optional[dict[str, Any]] = None,
     json: Any = None,
     data: Any = None,
-    response_type: Literal["json", "text", "bytes"] = "json",
+    response_type: Literal["json", "text"] = "json",
     headers: Optional[dict[str, str]] = None,
     timeout: int = 30,
     verbose: bool = True,
     validate_status: Optional[Callable[[int], bool]] = default_valid_status,
-    proxy: str = "",
+    proxies: Optional[ProxiesTypes] = None,
 ) -> RawResponse:
     try:
-        async with aiohttp.ClientSession() as session:
+        async with httpx.AsyncClient(proxies=proxies) as client:
             request_url_str = url_append_query(url, query)
 
             if verbose:
@@ -66,33 +108,31 @@ async def http_invoke(
                 )
 
             try:
-                async with session.request(
+                response = await client.request(
                     method,
                     request_url_str,
                     json=json,
                     data=data,
                     headers=headers,
                     timeout=timeout,
-                    proxy=proxy,
-                ) as response:
-                    response_headers = response.headers
+                )
 
-                    valid_status = validate_status or default_valid_status
-                    if not valid_status(response.status):
-                        raise HttpException(f"响应状态码为 {response.status}")
+                response_headers = response.headers
 
-                    if response_type == "json":
-                        resp = await response.json()
-                    elif response_type == "text":
-                        resp = await response.text()
-                    elif response_type == "bytes":
-                        resp = await response.read()
-                    else:
-                        raise HttpException(f"不支持的响应类型{response_type}")
+                valid_status = validate_status or default_valid_status
+                if not valid_status(response.status_code):
+                    raise HttpException(f"响应状态码为 {response.status_code}")
 
-                    if verbose:
-                        Log.debug(f"resp: {resp}")
-                    return RawResponse(response_headers, resp, response.status)
+                if response_type == "json":
+                    resp = response.json()
+                elif response_type == "text":
+                    resp = response.text
+                else:
+                    raise HttpException(f"不支持的响应类型{response_type}")
+
+                if verbose:
+                    Log.debug(f"resp: {resp}")
+                return RawResponse(response_headers, resp, response.status_code)
             except Exception as e:
                 raise HttpException(f"请求 URL[{url}] 错误", e)
     except Exception as e:
@@ -101,6 +141,74 @@ async def http_invoke(
         raise e
 
 
+# noinspection DuplicatedCode
+def http_invoke_sync(
+    url: str,
+    method: Literal["GET", "POST", "DELETE", "PUT", "HEAD", "OPTIONS"] = "GET",
+    query: Optional[dict[str, Any]] = None,
+    json: Any = None,
+    data: Any = None,
+    response_type: Literal["json", "text"] = "json",
+    headers: Optional[dict[str, str]] = None,
+    timeout: int = 30,
+    verbose: bool = True,
+    validate_status: Optional[Callable[[int], bool]] = default_valid_status,
+    proxies: Optional[ProxiesTypes] = None,
+) -> RawResponse:
+    try:
+        with httpx.Client(proxies=proxies) as client:
+            request_url_str = url_append_query(url, query)
+
+            if verbose:
+                request_log = [f"方法: {method}", f"URL: {request_url_str}"]
+                if data is not None:
+                    request_log.append(f"data: {data}")
+                if json is not None:
+                    request_log.append(f"json: {json}")
+                if headers is not None:
+                    request_log.append(f"请求头: {headers}")
+                Log.debug(f"http 调用, {', '.join(request_log)}")
+
+            if data is not None and json is not None:
+                raise ValueError(
+                    "data and json parameters can not be used at the same time"
+                )
+
+            try:
+                response = client.request(
+                    method,
+                    request_url_str,
+                    json=json,
+                    data=data,
+                    headers=headers,
+                    timeout=timeout,
+                )
+
+                response_headers = response.headers
+
+                valid_status = validate_status or default_valid_status
+                if not valid_status(response.status_code):
+                    raise HttpException(f"响应状态码为 {response.status_code}")
+
+                if response_type == "json":
+                    resp = response.json()
+                elif response_type == "text":
+                    resp = response.text
+                else:
+                    raise HttpException(f"不支持的响应类型{response_type}")
+
+                if verbose:
+                    Log.debug(f"resp: {resp}")
+                return RawResponse(response_headers, resp, response.status_code)
+            except Exception as e:
+                raise HttpException(f"请求 URL[{url}] 错误", e)
+    except Exception as e:
+        if verbose:
+            Log.error(f"http 调用 {request_url_str} 失败, {e}")
+        raise e
+
+
+# noinspection DuplicatedCode
 async def download_file(
     url: str, save_path, delete_if_exists: bool = False, verbose: bool = True
 ):
@@ -127,48 +235,86 @@ async def download_file(
             raise HttpException(f"delete file[{save_path}] error", e)
 
     await asyncio.sleep(1)
+    temp_file_path = f"{save_path}.temp"
 
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                with open(save_path, "wb") as fd:
-                    while True:
-                        chunk = await resp.content.read(1024)
-                        if not chunk:
-                            break
+    async with httpx.AsyncClient() as client:
+        try:
+            async with client.stream("GET", url) as response:
+                if response.status_code != 200:
+                    raise HttpException(
+                        f"download url[{url}] error, status[{response.status_code}]"
+                    )
+                with open(temp_file_path, "wb") as fd:
+                    async for chunk in response.aiter_bytes(4096):
                         fd.write(chunk)
                     fd.flush()
-    except Exception as e:
-        raise HttpException(f"download url[{url}] to path[{save_path}] error", e)
-
-
-# noinspection PyShadowingNames
-def url_append_query(url: str, query: Optional[Dict[str, Any]]) -> str:
-    request_url_str = url
-    try:
-        url_parts = urlparse(url)
-    except Exception as e:
-        raise HttpException(f"parse url[{url}] error", e)
-
-    if query is not None:
-        try:
-            original_query = parse_qs(url_parts.query)
-            original_query.update(query)
-            encoded_query = urlencode(original_query, doseq=True)
-            new_url_parts = url_parts._replace(query=encoded_query)
-            new_url = urlunparse(new_url_parts)
-            request_url_str = str(new_url)
         except Exception as e:
-            raise HttpException(f"parse query[{query}] error", e)
-    return request_url_str
+            raise HttpException(f"download url[{url}] to path[{save_path}] error", e)
+
+    # rename temp file to save path
+    try:
+        os.rename(temp_file_path, save_path)
+    except Exception as e:
+        try:
+            os.remove(temp_file_path)
+        except:
+            pass
+        raise HttpException(
+            f"rename temp file[{temp_file_path}] to save path[{save_path}] error", e
+        )
 
 
-def file_name_generator(file_name: str):
-    suffix_index = file_name.rindex(".")
-    file_name_prefix = file_name[:suffix_index]
-    suffix = file_name[suffix_index + 1 :]
-    # md5
-    md5_hash = hashlib.md5()
-    md5_hash.update(file_name_prefix.encode())
-    digest = md5_hash.hexdigest()
-    return f"{digest}.{suffix}"
+# noinspection DuplicatedCode
+def download_file_sync(
+    url: str, save_path, delete_if_exists: bool = False, verbose: bool = True
+):
+    if not url:
+        raise HttpException("download url is empty")
+
+    if not save_path:
+        raise HttpException("save path is empty")
+
+    exists = os.path.exists(save_path)
+    is_file = os.path.isfile(save_path)
+    if not delete_if_exists and exists and is_file:
+        if verbose:
+            Log.info(f"download url[{url}] to path[{save_path}], file exists, skip")
+        return
+
+    if exists:
+        try:
+            if is_file:
+                os.remove(save_path)
+            else:
+                shutil.rmtree(save_path)
+        except Exception as e:
+            raise HttpException(f"delete file[{save_path}] error", e)
+
+    time.sleep(1)
+    temp_file_path = f"{save_path}.temp"
+
+    with httpx.Client() as client:
+        try:
+            with client.stream("GET", url) as response:
+                if response.status_code != 200:
+                    raise HttpException(
+                        f"download url[{url}] error, status[{response.status_code}]"
+                    )
+                with open(temp_file_path, "wb") as fd:
+                    for chunk in response.iter_bytes(4096):
+                        fd.write(chunk)
+                    fd.flush()
+        except Exception as e:
+            raise HttpException(f"download url[{url}] to path[{save_path}] error", e)
+
+    # rename temp file to save path
+    try:
+        os.rename(temp_file_path, save_path)
+    except Exception as e:
+        try:
+            os.remove(temp_file_path)
+        except:
+            pass
+        raise HttpException(
+            f"rename temp file[{temp_file_path}] to save path[{save_path}] error", e
+        )

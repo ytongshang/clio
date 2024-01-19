@@ -2,7 +2,7 @@ import subprocess
 
 packages = [
     # http
-    "aiohttp",
+    "httpx",
     "fastapi",
     # mysql
     "sqlmodel",
