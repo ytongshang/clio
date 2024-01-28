@@ -1,3 +1,5 @@
+from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.requests import Request
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -18,10 +20,14 @@ class SessionMiddleware:
             await self.app(scope, receive, send)
             return
 
-        req = Request(scope)
+        req = Request(scope, receive=receive, send=send)
         try:
             await self.app(scope, receive, send)
         finally:
             state = req.state
             if hasattr(state, "db_session"):
-                state.db_session.close()
+                session = state.db_session
+                if isinstance(session, AsyncSession):
+                    await session.close()
+                if isinstance(session, Session):
+                    session.close()
