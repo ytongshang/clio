@@ -1,8 +1,10 @@
 # clio
 
+- 基于fastapi, sqlmode的框架
+
 ## RawContextMiddleware
 
-- 像flask一样可以在任何地方获取当前请求的request对象
+- 请求上下文对象，可以像flask一样在任何地方获取当前请求的request对象
 
 ### 如何使用
 
@@ -12,6 +14,14 @@
 application = FastAPI()
 application.add_middleware(SessionMiddleware, sqlalchemy=db)
 application.add_middleware(RawContextMiddleware)
+```
+
+- 获取requestContext上下文
+
+```
+from clio.web import request_context
+
+requext_context = request_context()
 ```
 
 - 获取request
@@ -36,6 +46,7 @@ current_request_context.remove("key")
 ## SessionMiddleware
 
 - 支持全局获取db.session,session生命周期与request一致
+- 支持同步与异步session
 
 ### 如何使用
 
