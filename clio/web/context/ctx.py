@@ -27,6 +27,7 @@ class RequestContext:
         state: State = self._request.state
         if hasattr(state, key):
             return delattr(state, key)
+        return None
 
     @property
     def request(self) -> Request:

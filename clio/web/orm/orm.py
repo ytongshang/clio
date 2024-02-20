@@ -94,6 +94,18 @@ class SQLAlchemy:
             req.state.db_session = self.SessionMaker()
             return req.state.db_session
 
+    def get_session(self):
+        if self.async_mode:
+            raise RuntimeError("async_mode, use get_async_session instead")
+        with self.SessionMaker() as session:
+            yield session
+
+    async def get_async_session(self):
+        if not self.async_mode:
+            raise RuntimeError("not async_mode, use get_session instead")
+        async with self.SessionMaker() as session:
+            yield session
+
     def query(self, *entities, **kwargs) -> Query:
         """使用老的SqlAlchemy的query方法"""
         if self.async_mode:
