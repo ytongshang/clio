@@ -19,7 +19,9 @@ class Workspace:
     """A class that represents a workspace for an AutoGPT agent."""
 
     NULL_BYTES = ["\0", "\000", "\x00", "\u0000"]
-    _default_work_space: Workspace
+    default_workspace_name = "default"
+    data_workspace_name = "data"
+    _workspace_map: dict[str, Workspace] = {}
 
     def __init__(self, workspace_root: str | Path, restrict_to_workspace: bool):
         self._root = self._sanitize_path(workspace_root)
@@ -28,16 +30,39 @@ class Workspace:
     @staticmethod
     def default_workspace() -> Workspace:
         """Get the default workspace directory."""
-        if Workspace._default_work_space is None:
+        space = Workspace._workspace_map.get(Workspace.default_workspace_name)
+        if space is None:
             raise ValueError(
-                "Default workspace has not been initialized. Call `set_default_workspace` first. "
+                "Default workspace has not been initialized. Call `save_workspace` first. "
             )
-        return Workspace._default_work_space
+        return space
 
     @staticmethod
-    def set_default_workspace(workspace: Workspace):
+    def data() -> Workspace:
+        """Get the default workspace directory."""
+        space = Workspace._workspace_map.get(Workspace.data_workspace_name)
+        if space is None:
+            raise ValueError(
+                "Resources workspace has not been initialized. Call `save_workspace` first. "
+            )
+        return space
+
+    @staticmethod
+    def save_workspace(
+        workspace_name: str,
+        workspace: Workspace,
+    ):
         """Set the default workspace directory."""
-        Workspace._default_work_space = workspace
+        Workspace._workspace_map[workspace_name] = workspace
+
+    @staticmethod
+    def get_workspace(workspace_name: str) -> Workspace:
+        space = Workspace._workspace_map.get(workspace_name)
+        if space is None:
+            raise ValueError(
+                "Resources workspace has not been initialized. Call `save_workspace` first. "
+            )
+        return space
 
     @classmethod
     def make_workspace(
