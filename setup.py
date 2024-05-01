@@ -15,17 +15,16 @@ with open(os.path.join(here, "clio/version.py")) as fp:
 __version__ = version["__version__"]
 
 install_requires = [
-    # fastapi
+    # http
+    "httpx",
     "fastapi",
-    "hypercorn",
+    "uvicorn[standard]",
     # sqlalchemy
-    "sqlalchemy",
-    "SQLAlchemy-serializer",
+    "sqlmodel",
+    "alembic",
     # base
-    "pydantic",
-    "inflection",
     "colorlog",
-    "aiohttp",
+    "pydantic",
 ]
 
 setuptools.setup(
