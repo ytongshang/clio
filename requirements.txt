@@ -27,7 +27,6 @@ packaging==24.1
 pathspec==0.12.1
 platformdirs==4.3.6
 pre-commit==3.8.0
-prisma==0.15.0
 psycopg2-binary==2.9.9
 pydantic==2.9.2
 pydantic_core==2.23.4

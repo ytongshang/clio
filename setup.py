@@ -18,10 +18,10 @@ install_requires = [
     # http
     "httpx",
     "fastapi",
+    "pydantic",
     "uvicorn[standard]",
     # sqlalchemy
     "sqlmodel",
-    "alembic",
     # base
     "colorlog",
     "pydantic",

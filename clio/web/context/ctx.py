@@ -1,39 +1,33 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Dict, Optional
 
-from starlette.datastructures import State
 from starlette.requests import Request
 
 
 class RequestContext:
-    def __init__(self, request: Request):
-        self._request = request
+    key_request = "__request"
+
+    def __init__(self, data: Dict[str, Any]):
+        self._data = data
 
     def get(self, key: str, default: Any = None) -> Any:
         """Get value from context."""
-        state: State = self._request.state
-        if hasattr(state, key):
-            return getattr(state, key, default)
-        return default
+        return self._data.get(key, default)
 
     def set(self, key: str, value: Any):
         """Set value in context."""
-        state = self._request.state
-        setattr(state, key, value)
+        self._data[key] = value
 
     def remove(self, key: str) -> Any:
         """Remove value from context and return the old value."""
-        state: State = self._request.state
-        if hasattr(state, key):
-            return delattr(state, key)
-        return None
-
-    @property
-    def request(self) -> Request:
-        return self._request
+        self._data.pop(key, None)
 
     def copy(self) -> RequestContext:
         return self.__class__(
-            request=self._request,
+            data=self._data,
         )
+
+    @property
+    def request(self) -> Optional[Request]:
+        return self.get(RequestContext.key_request, None)
