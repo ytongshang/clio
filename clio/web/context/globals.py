@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+from contextlib import contextmanager, asynccontextmanager
 from contextvars import ContextVar, Token
 from typing import Iterator
 
@@ -14,7 +14,25 @@ _request_scope_context_storage: ContextVar[RequestContext] = ContextVar(
 
 @contextmanager
 def request_context_manager(
-    initial_data: RequestContext,
+        initial_data: RequestContext,
+) -> Iterator[None]:
+    """Creates and resets a starlette-context context.
+
+    Used in the Context and Raw middlewares, but can also be used to
+    create a context out of a proper request cycle, such as in unit
+    tests.
+    """
+    token: Token = _request_scope_context_storage.set(initial_data.copy())
+    try:
+        yield
+    finally:
+        pass
+    _request_scope_context_storage.reset(token)
+
+
+@asynccontextmanager
+def request_async_context_manager(
+        initial_data: RequestContext,
 ) -> Iterator[None]:
     """Creates and resets a starlette-context context.
 

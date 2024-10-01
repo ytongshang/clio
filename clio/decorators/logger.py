@@ -2,7 +2,7 @@ import functools
 import inspect
 import time
 
-from clio.utils import Log, Performance, short_json
+from clio.utils import Log, short_json
 from clio.web import HttpResponse
 
 from .common import is_async_function
@@ -32,7 +32,6 @@ def logger(func):
             result = await func(*args, **kwargs)
             end_time = time.time()
             elapsed_time = end_time - start_time
-            Performance().add(module_name, function_name, elapsed_time)
             Log.info(
                 "async invoke 【{}.{}】 elapsed_time:【{}】 ,param:【{},{}】 ,result:【{}】".format(
                     module_name,
@@ -55,7 +54,6 @@ def logger(func):
             result = func(*args, **kwargs)
             end_time = time.time()
             elapsed_time = end_time - start_time
-            Performance().add(module_name, function_name, elapsed_time)
             Log.info(
                 "sync invoke 【{}.{}】 elapsed_time:【{}】 ,param:【{},{}】 ,result:【{}】".format(
                     module_name,

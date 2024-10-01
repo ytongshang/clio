@@ -4,6 +4,7 @@ packages = [
     # http
     "httpx",
     "fastapi",
+    "pydantic",
     # mysql
     "sqlmodel",
     "psycopg2-binary",
