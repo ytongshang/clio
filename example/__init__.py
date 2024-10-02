@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
-from clio.utils.log import console_handler, default_logger
+from clio.utils.log import console_handler, default_logger, Log
 
 
 def load_env():
@@ -13,4 +13,5 @@ def load_env():
 
 
 console_handler(default_logger)
+Log.debug("test", sky_extra={"test": "test"})
 load_env()

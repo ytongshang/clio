@@ -57,29 +57,35 @@ def file_handler(
 class Log:
     @staticmethod
     def debug(msg, *args, **kwargs):
+        kwargs = Log._logging_extra(**kwargs)
         default_logger.debug(msg, *args, **kwargs)
 
     @staticmethod
     def info(msg, *args, **kwargs):
+        kwargs = Log._logging_extra(**kwargs)
         default_logger.info(msg, *args, **kwargs)
 
     @staticmethod
     def warn(msg, *args, **kwargs):
+        kwargs = Log._logging_extra(**kwargs)
         default_logger.warning(msg, *args, **kwargs)
 
     @staticmethod
     def error(msg, *args, **kwargs):
         exec_info = kwargs.pop("exc_info", True)
+        kwargs = Log._logging_extra(**kwargs)
         default_logger.error(msg, *args, exc_info=exec_info, **kwargs)
 
     @staticmethod
     def fatal(msg, *args, **kwargs):
         exec_info = kwargs.pop("exc_info", True)
+        kwargs = Log._logging_extra(**kwargs)
         default_logger.critical(msg, *args, exc_info=exec_info, **kwargs)
 
     @staticmethod
     def exception(msg="", *args, **kwargs):
         exec_info = kwargs.pop("exc_info", True)
+        kwargs = Log._logging_extra(**kwargs)
         default_logger.exception(msg, *args, exc_info=exec_info, **kwargs)
 
     @staticmethod
