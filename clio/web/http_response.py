@@ -1,7 +1,8 @@
 from typing import Generic, Optional, TypeVar
 
-from clio.pydantics import BaseModel, Field
-from clio.utils import object_to_json
+from pydantic import BaseModel, Field
+
+from clio import jsonable_encoder
 
 T = TypeVar("T")
 
@@ -23,5 +24,5 @@ class HttpResponse(BaseModel, Generic[T]):
         return {
             "code": self.code,
             "message": self.message,
-            "data": object_to_json(self.data) if self.data is not None else None,
+            "data": jsonable_encoder(self.data) if self.data is not None else None,
         }
