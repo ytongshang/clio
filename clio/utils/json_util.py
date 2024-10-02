@@ -221,7 +221,6 @@ def jsonable_encoder(
         exclude = set(exclude)
     if isinstance(obj, BaseModel):
         obj_dict = obj.model_dump(
-            obj,
             mode="json",
             include=include,
             exclude=exclude,
@@ -238,7 +237,6 @@ def jsonable_encoder(
         )
     if isinstance(obj, V1BaseModel):
         obj_dict = obj.dict(
-            obj,
             mode="json",
             include=include,
             exclude=exclude,
