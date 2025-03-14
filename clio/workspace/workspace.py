@@ -28,12 +28,21 @@ class Workspace:
         self._restrict_to_workspace = restrict_to_workspace
 
     @staticmethod
-    def default_workspace() -> Workspace:
+    def default() -> Workspace:
         """Get the default workspace directory."""
         space = Workspace._workspace_map.get(Workspace.default_workspace_name)
         if space is None:
             raise ValueError(
                 "Default workspace has not been initialized. Call `save_workspace` first. "
+            )
+        return space
+
+    @staticmethod
+    def get_workspace(workspace_name: str) -> Workspace:
+        space = Workspace._workspace_map.get(workspace_name)
+        if space is None:
+            raise ValueError(
+                "Resources workspace has not been initialized. Call `save_workspace` first. "
             )
         return space
 
@@ -54,15 +63,6 @@ class Workspace:
     ):
         """Set the default workspace directory."""
         Workspace._workspace_map[workspace_name] = workspace
-
-    @staticmethod
-    def get_workspace(workspace_name: str) -> Workspace:
-        space = Workspace._workspace_map.get(workspace_name)
-        if space is None:
-            raise ValueError(
-                "Resources workspace has not been initialized. Call `save_workspace` first. "
-            )
-        return space
 
     @classmethod
     def make_workspace(

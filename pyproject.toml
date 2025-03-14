@@ -62,5 +62,6 @@ disallow_untyped_defs = "false"
 module = [
     "requests",
     "requests.sessions",
+    "aiofiles"
 ]
 ignore_missing_imports = true

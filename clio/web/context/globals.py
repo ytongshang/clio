@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from contextvars import ContextVar, Token
-from typing import Iterator
+from typing import Any, Dict, Iterator
 
 from starlette.requests import Request
 
@@ -41,3 +41,11 @@ def request_context() -> RequestContext:
 
 def request() -> Request:
     return request_context().request
+
+
+def request_context_update(data: Dict[str, Any]):
+    if not has_request_context():
+        return
+    ctx = request_context()
+    for key, value in data.items():
+        ctx.set(key, value)

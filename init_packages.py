@@ -5,12 +5,12 @@ packages = [
     "httpx",
     "fastapi",
     # mysql
-    "sqlmodel",
+    "prisma",
     "psycopg2-binary",
-    "alembic",
     # 基础包
     "colorlog",
     "pydantic",
+    "aiofiles",
     # 代码格式
     "pre-commit",
     "isort",

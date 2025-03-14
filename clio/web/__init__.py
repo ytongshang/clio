@@ -14,7 +14,6 @@ from .web_initializer import common_exception_handlers
 __all__ = [
     # Exception
     "BusinessException",
-    "ParamException",
     "RpcException",
     # HttpResponse
     "HttpResponse",
@@ -33,5 +32,4 @@ __all__ = [
     "request",
     # orm
     "SQLAlchemy",
-    "SessionMiddleware",
 ]

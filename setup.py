@@ -19,12 +19,13 @@ install_requires = [
     "httpx",
     "fastapi",
     "uvicorn[standard]",
-    # sqlalchemy
-    "sqlmodel",
-    "alembic",
     # base
     "colorlog",
     "pydantic",
+    "aiofiles",
+    # db
+    "prisma",
+    "psycopg2-binary",
 ]
 
 setuptools.setup(
@@ -32,7 +33,7 @@ setuptools.setup(
     version=__version__,
     author="rancune",
     author_email="ytongshang@gmail.com",
-    description="A python web framework based on flask and sqlalchemy",
+    description="A python web framework based on flask and prisma",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ytongshang/clio",

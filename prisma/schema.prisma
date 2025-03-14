@@ -1,0 +1,186 @@
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = "-1"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URI")
+}
+
+
+model User {
+  id              String    @id @default(cuid())
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime? @map("email_verified")
+  image           String?
+  userName        String?   @unique @map("user_name")
+  hashed_password String?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  accounts  Account[]
+  sessions  Session[]
+
+  @@map("user")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("user_account")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user_session")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("user_verification_token")
+}
+
+model Item {
+  id            Int      @id @default(autoincrement())
+  locale        String
+  currency_code String
+  alias         String   @unique
+  title         String   @default("")
+  description   String   @default("")
+  image         String   @default("")
+  extra         String   @default("")
+  status        Int      @default(0) @db.SmallInt
+  test          Int      @default(0) @db.SmallInt
+  is_deleted    Int      @default(0) @db.SmallInt
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([locale])
+  @@map("e_item")
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  order_no      String   @unique
+  locale        String
+  user_id       String
+  currency_code String
+  sub_total     Int      @default(0)
+  discount      Int      @default(0)
+  total         Int      @default(0)
+  booked_at     DateTime @default(dbgenerated("'1970-01-01 00:00:00'::timestamp"))
+  expired_at    DateTime @default(dbgenerated("'1970-01-01 00:00:00'::timestamp"))
+  payed_at      DateTime @default(dbgenerated("'1970-01-01 00:00:00'::timestamp"))
+  canceled_at   DateTime @default(dbgenerated("'1970-01-01 00:00:00'::timestamp"))
+  closed_at     DateTime @default(dbgenerated("'1970-01-01 00:00:00'::timestamp"))
+  book_key      String   @default("")
+  pay_method    Int      @default(0)
+  pay_no        String   @default("")
+  pay_info      String   @default("")
+  tag           String   @default("")
+  status        Int      @default(0)
+  extra         String   @default("")
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@unique([user_id, book_key])
+  @@index([order_no])
+  @@map("e_order")
+}
+
+model OrderItem {
+  id           Int      @id @default(autoincrement())
+  order_no     String
+  item_id      Int      @default(0)
+  sku_id       Int      @default(0)
+  title        String   @default("")
+  sku_property String   @default("")
+  image        String   @default("")
+  unit_price   Int      @default(0)
+  num          Int      @default(0)
+  total        Int      @default(0)
+  sub_total    Int      @default(0)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@unique([order_no, item_id, sku_id])
+  @@map("e_order_item")
+}
+
+model Sku {
+  id             Int      @id @default(autoincrement())
+  item_id        Int
+  sku_property   String   @default("")
+  price          Int      @default(0)
+  original_price Int      @default(0)
+  price_suffix   String   @default("")
+  stock          Int      @default(0)
+  effect         String   @default("")
+  extra          String   @default("")
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@index([item_id])
+  @@map("e_sku")
+}
+
+model UserCredits {
+  id              Int      @id @default(autoincrement())
+  user_id         String
+  user_service_id Int
+  operation       String
+  credits         Int      @default(0)
+  total_credits   Int      @default(0)
+  extra           String   @default("")
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@index([user_service_id])
+  @@map("old_user_credits")
+}
+
+model UserService {
+  id           Int      @id @default(autoincrement())
+  user_id      String
+  service_type Int      @default(0)
+  service_code String
+  credits      Int      @default(0)
+  end_time     Int      @default(0)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@unique([user_id, service_code])
+  @@index([user_id])
+  @@map("user_service")
+}
