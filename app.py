@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from starlette.responses import RedirectResponse
 
 from clio import common_exception_handlers
-from clio.web.middleware.middleware import RawContextMiddleware
+from clio.web.middleware.middleware import HttpMiddleware, RawContextMiddleware
 from example.controller.test_controller import test_api_router
 
 
@@ -13,6 +13,7 @@ def create_app():
     )
     application.include_router(test_api_router)
     # middlewares,后加的先执行
+    application.add_middleware(HttpMiddleware)
     application.add_middleware(RawContextMiddleware)
 
     @application.get("/")

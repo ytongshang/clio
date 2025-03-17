@@ -45,6 +45,11 @@ class TraceContext:
             trace_extra.update(data)
             ctx.set("__trace_extra", trace_extra)
 
+    def patch_http_invoke(self, headers: Dict[str, str]):
+        trace_id = self.trace_id()
+        if trace_id:
+            headers.update({TraceContext.X_TRACE_ID: trace_id})
+
     def create_unique_id(
         self,
     ):
