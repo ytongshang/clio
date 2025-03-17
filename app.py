@@ -2,39 +2,24 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.responses import RedirectResponse
 
-from clio import SessionMiddleware, common_exception_handlers, hack_json
-from clio.web.context.middleware import RawContextMiddleware
+from clio import common_exception_handlers
+from clio.web.middleware.middleware import RawContextMiddleware
 from example.controller.test_controller import test_api_router
-from example.database.database import db
-
-hack_json()
 
 
 def create_app():
-    # database
-    init_database()
-
     application = FastAPI(
         exception_handlers=common_exception_handlers(),
     )
-    # middlewares,后加的先执行
-    application.add_middleware(SessionMiddleware, sqlalchemy=db)
-    application.add_middleware(RawContextMiddleware)
-
-    # routers
     application.include_router(test_api_router)
+    # middlewares,后加的先执行
+    application.add_middleware(RawContextMiddleware)
 
     @application.get("/")
     async def home():
         return RedirectResponse(url="/docs")
 
     return application
-
-
-def init_database():
-    from example.database import models  # noqa
-
-    db.create_all()
 
 
 app = create_app()

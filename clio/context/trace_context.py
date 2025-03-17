@@ -4,16 +4,17 @@ import struct
 import time
 from typing import Any, Dict
 
-from clio import has_request_context, request_context
+from .globals import has_request_context, request_context
 
 
 class TraceContext:
     X_TRACE_ID = "x-trace-id"
+    TRACE_EXTRA = "__trace_extra"
 
     def __init__(self, app_name: str):
         self.app_name = app_name
 
-    def parse_trace_id(self, scope) -> Dict[str, str]:
+    def parse_trace_id(self, scope, context) -> Dict[str, str]:
         raw_headers = list(scope.get("headers", []))
         headers = {}
         for key, value in raw_headers:
@@ -22,7 +23,11 @@ class TraceContext:
         if not trace_id:
             unique_id = self.create_unique_id()
             trace_id = f"{self.app_name}-{unique_id}"
-        return {TraceContext.X_TRACE_ID: trace_id}
+        m = {TraceContext.X_TRACE_ID: trace_id}
+        extra_m = context.get(TraceContext.TRACE_EXTRA, {})
+        extra_m.update(m)
+        context.set(TraceContext.TRACE_EXTRA, extra_m)
+        return m
 
     def trace_id(self):
         extra_map = self.trace_extra()

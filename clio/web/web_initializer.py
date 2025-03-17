@@ -6,8 +6,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from clio.utils.log import Log
-
+from ..logger import Log
 from .exception.business_exception import BusinessException
 from .exception.rpc_exception import RpcException
 from .http_response import HttpResponse

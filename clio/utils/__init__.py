@@ -1,11 +1,7 @@
 from .json_util import hack_json, object_to_json, pretty_json, short_json
-from .log import Log, default_logger
 from .singleton import AbstractSingleton, Singleton
 
 __all__ = [
-    # log
-    "default_logger",
-    "Log",
     # singleton
     "Singleton",
     "AbstractSingleton",

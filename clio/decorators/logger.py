@@ -2,7 +2,8 @@ import functools
 import inspect
 import time
 
-from clio.utils import Log, short_json
+from clio.logger import Log
+from clio.utils import short_json
 from clio.web import HttpResponse
 
 """

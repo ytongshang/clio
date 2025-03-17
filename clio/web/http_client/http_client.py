@@ -9,7 +9,7 @@ import aiofiles
 import httpx
 from httpx import URL, Proxy
 
-from clio.utils import Log
+from clio.logger import Log
 
 ProxiesTypes = Union[URL, str, Proxy]
 

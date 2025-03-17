@@ -22,7 +22,7 @@ def request_context_manager(
     create a context out of a proper request cycle, such as in unit
     tests.
     """
-    token: Token = _request_scope_context_storage.set(initial_data.copy())
+    token: Token = _request_scope_context_storage.set(initial_data)
     yield
     _request_scope_context_storage.reset(token)
 

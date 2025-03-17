@@ -5,10 +5,31 @@ from datetime import datetime
 
 import colorlog
 
-default_logger = logging.getLogger()
+from clio.context import TraceContext
+from clio.context.trace import trace_context
+
+logging.basicConfig(level=logging.DEBUG)
+default_logger = logging.getLogger("clio")
 
 
-def console_handler(logger):
+class CustomFileHandler(logging.FileHandler):
+    def emit(self, record):
+        extra_map = trace_context.trace_extra()
+        trace_id = extra_map.pop(TraceContext.X_TRACE_ID, None)
+        lines = []
+        if trace_id:
+            lines.append(f"{trace_id} ｜")
+        if extra_map:
+            lines.append("[")
+            for k, v in extra_map.items():
+                lines.append(f"{str(k)}={str(v)}")
+            lines.append("]")
+        lines.append(record.msg)
+        record.msg = " ".join(lines)
+        super().emit(record)
+
+
+def console_handler(log_level=logging.DEBUG):
     _formatter = colorlog.ColoredFormatter(
         "%(log_color)s%(asctime)s - %(levelname)5s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
@@ -22,18 +43,19 @@ def console_handler(logger):
     )
     _handler = logging.StreamHandler()
     _handler.setFormatter(_formatter)
-    logger.addHandler(_handler)
-    logger.setLevel(logging.DEBUG)
+    _handler.setLevel(log_level)
+    return _handler
 
 
 def file_handler(
-    logger,
     log_dir,
     file_max_keep_days=7,
-    logging_level=logging.DEBUG,
+    logging_level=logging.INFO,
     log_format="%(asctime)s | %(levelname)s | %(message)s",
 ):
     current_date = datetime.now()
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
     for log_file in glob.glob(os.path.join(log_dir, "*.log")):
         file_date_str = os.path.basename(log_file).split(".")[0]
         file_date = datetime.strptime(file_date_str, "%Y_%m_%d")
@@ -45,13 +67,10 @@ def file_handler(
                 pass
 
     time = datetime.now().strftime("%Y_%m_%d")
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    log_file_handler = logging.FileHandler(f"{log_dir}/{time}.log")
+    log_file_handler = CustomFileHandler(f"{log_dir}/{time}.log")
     log_file_handler.setLevel(logging_level)
-    formatter = logging.Formatter(log_format)
-    log_file_handler.setFormatter(formatter)
-    logger.addHandler(log_file_handler)
+    log_file_handler.setFormatter(logging.Formatter(log_format))
+    return log_file_handler
 
 
 class Log:

@@ -2,8 +2,5 @@ from prisma import Prisma
 
 
 class SQLAlchemy:
-    def __init__(
-        self,
-        database_uri: str,
-    ):
+    def __init__(self):
         self.client: Prisma = Prisma()
