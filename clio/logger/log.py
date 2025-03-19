@@ -10,6 +10,7 @@ from clio.context.trace import trace_context
 
 logging.basicConfig(level=logging.DEBUG)
 default_logger = logging.getLogger("clio")
+default_logger.propagate = False
 
 
 class CustomFileHandler(logging.FileHandler):
